@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-android;net8.0-ios</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>WildLensApp</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationTitle>WildLens-App</ApplicationTitle>
+    <ApplicationId>com.example.wildlens</ApplicationId>
+    <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.18.0" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="2.88.8" />
+    <PackageReference Include="SQLite-net-pcl" Version="1.10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiAsset Include="Resources\Assets\model.onnx" Condition="Exists('Resources\Assets\model.onnx')" />
+    <MauiAsset Include="Resources\Assets\labels.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="CommunityToolkit.Maui" />
+    <Using Include="CommunityToolkit.Maui.Media" />
+  </ItemGroup>
+</Project>

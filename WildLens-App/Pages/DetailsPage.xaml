@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WildLensApp.Pages.DetailsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:WildLensApp.ViewModels"
+    Title="Details">
+    <ContentPage.BindingContext>
+        <viewmodels:DetailsViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="{Binding Detection.Label}" FontSize="28" FontAttributes="Bold"/>
+            <Label Text="{Binding Detection.Confidence, StringFormat='Confidence: {0:P2}'}"/>
+            <BoxView HeightRequest="1" Color="#ddd"/>
+            <Label Text="About this species:" FontAttributes="Bold"/>
+            <Label Text="This is a placeholder. You can enrich this page with species-specific info, images, and links." LineBreakMode="WordWrap"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
