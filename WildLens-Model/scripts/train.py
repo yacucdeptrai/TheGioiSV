@@ -29,7 +29,17 @@ def save_labels_txt(labels, out_path: Path):
 
 
 def auto_device(user_device: str | None) -> str | int | None:
+    """Select device with priority: explicit user → CUDA (0) → MPS → CPU.
+    Accepts common synonyms like 'cuda', 'cpu', 'mps', or GPU indices '0', '0,1'.
+    """
     if user_device:
+        ud = str(user_device).strip().lower()
+        # Normalize common synonyms
+        if ud in {"cuda", "gpu"}:
+            return 0 if torch.cuda.is_available() else "cpu"
+        if ud in {"cpu", "mps"}:
+            return ud
+        # If a comma-separated list or numeric id is provided, just forward to Ultralytics
         return user_device
     # Prefer CUDA if available
     if torch.cuda.is_available():
@@ -60,6 +70,7 @@ def main():
     parser.add_argument('--half', action='store_true', help='train in mixed precision if supported')
     parser.add_argument('--augment', action='store_true', help='enable stronger data augmentation')
     parser.add_argument('--cache', action='store_true', help='cache images for faster training')
+    parser.add_argument('--workers', type=int, default=8, help='number of dataloader workers')
     args = parser.parse_args()
 
     data_yaml = Path(args.data).resolve()
@@ -70,6 +81,44 @@ def main():
     ensure_dir(export_dir)
 
     dev = auto_device(args.device)
+
+    # Log device selection and environment
+    try:
+        if isinstance(dev, (int, str)):
+            if dev == 'cpu':
+                print('Device selected: CPU')
+            elif dev == 'mps':
+                print('Device selected: Apple MPS (Metal)')
+            else:
+                # e.g., 0 or '0,1'
+                print(f'Device selected: {dev} (CUDA preferred when available)')
+        else:
+            print(f'Device selected: {dev}')
+
+        print(f"PyTorch CUDA available: {torch.cuda.is_available()}")
+        if torch.cuda.is_available():
+            try:
+                current = 0 if isinstance(dev, int) else torch.cuda.current_device()
+                name = torch.cuda.get_device_name(current)
+                cap = torch.cuda.get_device_capability(current)
+                print(f"Using CUDA device: {current} — {name}, capability={cap}")
+            except Exception:
+                pass
+        else:
+            # If ORT sees CUDA but PyTorch does not, warn user how to fix
+            try:
+                import onnxruntime as ort
+                providers = ort.get_available_providers()
+                if 'CUDAExecutionProvider' in providers:
+                    print("WARN: ONNX Runtime exposes CUDAExecutionProvider but PyTorch is CPU-only.")
+                    print("      Install a CUDA-enabled PyTorch matching your driver:")
+                    print("      python .\\WildLens-Model\\scripts\\install_torch_cuda.py --yes")
+                    print("      Or manually: pip uninstall -y torch torchvision torchaudio && "
+                          "pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio")
+            except Exception:
+                pass
+    except Exception:
+        pass
 
     # Load base YOLOv8n model
     model = YOLO('yolov8n.pt')
@@ -85,7 +134,7 @@ def main():
         project=str(export_dir.parent),  # train runs will go under WildLens-Model/runs/
         verbose=True,
         plots=True,
-        workers=8,
+        workers=args.workers,
         # optimizer & LR
         optimizer=args.optimizer,
         lr0=args.lr0,

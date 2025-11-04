@@ -33,6 +33,31 @@ Location: `./WildLens-Model`
   pip install -r requirements.txt
   ```
 
+### 1.1.a GPU Setup (CUDA)
+- Quick installer (recommended):
+  ```powershell
+  # Inside the WildLens-Model virtualenv
+  python .\WildLens-Model\scripts\install_torch_cuda.py --yes
+  ```
+  This detects your CUDA with `nvidia-smi` and installs matching CUDA wheels for PyTorch (torch/vision/audio).
+- Manual install (alternative):
+  ```powershell
+  # CUDA 12.1 wheels
+  pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio
+  # or CUDA 12.4 wheels
+  pip install --index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
+  ```
+- Ensure GPU-enabled ONNX Runtime is installed (requirements include `onnxruntime-gpu`). If you previously installed CPU-only ORT, uninstall it first to avoid conflicts:
+  ```powershell
+  pip uninstall -y onnxruntime
+  pip install -U onnxruntime-gpu
+  ```
+- Verify GPU availability:
+  ```powershell
+  python .\WildLens-Model\scripts\check_gpu.py
+  ```
+- If ONNX shows `CUDAExecutionProvider` but PyTorch says `CUDA available: False`, re-run the installer above.
+
 ### 1.2. Data
 - Source: Roboflow export for 30 species. Place the dataset (images, labels, `data.yaml`) under `WildLens-Model/data/`.
 - Default YAML path: `WildLens-Model/data/data.yaml` (override with `--data` if needed).

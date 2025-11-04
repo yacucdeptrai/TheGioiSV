@@ -59,9 +59,21 @@ def main():
     parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--labels', type=str, required=True)
     parser.add_argument('--imgsz', type=int, default=640)
-    parser.add_argument('--providers', type=str, default='CPUExecutionProvider',
-                        help='Comma-separated ORT providers, e.g. CUDAExecutionProvider,CPUExecutionProvider')
+    parser.add_argument('--providers', type=str, default='',
+                        help='Comma-separated ORT providers. If omitted, auto-selects CUDA→CPU based on availability.')
+    parser.add_argument('--auto-providers', action='store_true', default=True,
+                        help='Auto-select providers by availability (CUDAExecutionProvider first, else CPUExecutionProvider).')
+    parser.add_argument('--list-providers', action='store_true', help='List available ONNX Runtime providers and exit')
     args = parser.parse_args()
+
+    if args.list_providers:
+        print('Available ONNX Runtime providers:')
+        try:
+            import onnxruntime as ort
+            print(ort.get_available_providers())
+        except Exception as e:
+            print(f'Failed to query providers: {e}')
+        sys.exit(0)
 
     model_path = Path(args.model)
     labels_path = Path(args.labels)
@@ -82,12 +94,28 @@ def main():
     onnx.checker.check_model(onnx_model)
     print('ONNX structure: OK')
 
+    # Determine providers
+    selected_providers: list[str]
+    manual = [p.strip() for p in args.providers.split(',') if p.strip()]
+    if manual:
+        selected_providers = manual
+        print(f'Providers (manual): {selected_providers}')
+    else:
+        avail = ort.get_available_providers()
+        if args.auto_providers:
+            if 'CUDAExecutionProvider' in avail:
+                selected_providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+            else:
+                selected_providers = ['CPUExecutionProvider']
+        else:
+            selected_providers = ['CPUExecutionProvider']
+        print(f'Providers (auto from availability {avail}): {selected_providers}')
+
     # Create an inference session
-    providers = [p.strip() for p in args.providers.split(',') if p.strip()]
     try:
-        session = ort.InferenceSession(str(model_path), providers=providers)
+        session = ort.InferenceSession(str(model_path), providers=selected_providers)
     except Exception as e:
-        print(f'ERROR: Failed to create InferenceSession with providers={providers}: {e}')
+        print(f'ERROR: Failed to create InferenceSession with providers={selected_providers}: {e}')
         sys.exit(3)
 
     print_io(session)

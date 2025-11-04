@@ -26,6 +26,31 @@ This subproject contains everything needed to train a YOLOv8 model for 30 animal
   pip install -r requirements.txt
   ```
 
+### 2.1 GPU Setup (CUDA)
+- Quick installer (recommended):
+  ```powershell
+  # Inside the virtualenv
+  python .\scripts\install_torch_cuda.py --yes
+  ```
+  This script detects your CUDA via `nvidia-smi` and installs matching CUDA wheels for `torch`, `torchvision`, and `torchaudio`.
+- Manual install (if you prefer):
+  ```powershell
+  # CUDA 12.1 wheels
+  pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio
+  # or CUDA 12.4 wheels
+  pip install --index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
+  ```
+- Ensure GPU-enabled ONNX Runtime is present (requirements include `onnxruntime-gpu`). If you had CPU-only ORT installed, remove it to prevent conflicts:
+  ```powershell
+  pip uninstall -y onnxruntime
+  pip install -U onnxruntime-gpu
+  ```
+- Verify GPU availability and providers:
+  ```powershell
+  python .\scripts\check_gpu.py
+  ```
+- If `check_gpu.py` shows ONNX `CUDAExecutionProvider` but `PyTorch CUDA available: False`, re-run the installer above.
+
 ## 3) Dataset
 - Place your Roboflow export under `WildLens-Model/data/` so that a `data.yaml` exists at `WildLens-Model/data/data.yaml` (default expected by `train.py`).
 - You can override the path with `--data`.
