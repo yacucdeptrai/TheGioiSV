@@ -58,7 +58,7 @@ def main():
     parser = argparse.ArgumentParser(description='Validate exported ONNX model for WildLens (enhanced checks)')
     parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--labels', type=str, required=True)
-    parser.add_argument('--imgsz', type=int, default=640)
+    parser.add_argument('--imgsz', type=int, default=320)
     parser.add_argument('--providers', type=str, default='',
                         help='Comma-separated ORT providers. If omitted, auto-selects CUDA→CPU based on availability.')
     parser.add_argument('--auto-providers', action='store_true', default=True,

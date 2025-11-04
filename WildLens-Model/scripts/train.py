@@ -28,6 +28,71 @@ def save_labels_txt(labels, out_path: Path):
             f.write(str(name).strip() + "\n")
 
 
+def _load_names_from_yaml(data_yaml: Path) -> list[str]:
+    try:
+        cfg = load_yaml(data_yaml)
+        names = cfg.get('names')
+        if isinstance(names, list) and names:
+            return names
+    except Exception:
+        pass
+    return TARGET_CLASSES_30
+
+
+def _build_name2id(names: list[str]) -> dict[str, int]:
+    return {n: i for i, n in enumerate(names)}
+
+
+def _detect_species_from_path(label_file: Path, valid: dict[str, int]) -> tuple[str, int] | None:
+    p = label_file
+    # Walk up a few levels: .../<Species>/<split>/labels/file.txt
+    for _ in range(6):
+        p = p.parent
+        if not p:
+            break
+        if p.name in valid:
+            return p.name, valid[p.name]
+    return None
+
+
+def _remap_label_file(file_path: Path, new_id: int, backup: bool = True) -> int:
+    text = file_path.read_text(encoding='utf-8')
+    lines = text.splitlines()
+    out_lines = []
+    changed = 0
+    for ln in lines:
+        s = ln.strip()
+        if not s:
+            out_lines.append(ln)
+            continue
+        parts = s.split()
+        try:
+            int(parts[0])
+        except Exception:
+            out_lines.append(ln)
+            continue
+        parts[0] = str(new_id)
+        out_lines.append(' '.join(parts))
+        changed += 1
+    if backup:
+        file_path.with_suffix('.txt.bak').write_text('\n'.join(lines) + ('\n' if lines else ''), encoding='utf-8')
+    file_path.write_text('\n'.join(out_lines) + ('\n' if out_lines else ''), encoding='utf-8')
+    return changed
+
+
+def _scan_unique_ids(root: Path) -> list[int]:
+    ids = set()
+    for f in root.rglob('labels/*.txt'):
+        for line in f.read_text(encoding='utf-8').splitlines():
+            s = line.strip()
+            if not s:
+                continue
+            tok = s.split()[0]
+            if tok.isdigit():
+                ids.add(int(tok))
+    return sorted(ids)
+
+
 def auto_device(user_device: str | None) -> str | int | None:
     """Select device with priority: explicit user → CUDA (0) → MPS → CPU.
     Accepts common synonyms like 'cuda', 'cpu', 'mps', or GPU indices '0', '0,1'.
@@ -54,8 +119,8 @@ def main():
     parser = argparse.ArgumentParser(description='WildLens: Train YOLOv8 on custom 30-species dataset and export ONNX + labels')
     parser.add_argument('--data', type=str, default=str(Path(__file__).resolve().parent.parent / 'data' / 'data.yaml'),
                         help='Path to dataset data.yaml (centralized at WildLens-Model/data/data.yaml by default)')
-    parser.add_argument('--epochs', type=int, default=100)
-    parser.add_argument('--imgsz', type=int, default=640)
+    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--imgsz', type=int, default=320)
     parser.add_argument('--batch', type=int, default=16)
     parser.add_argument('--device', type=str, default=None, help='Device id or type: 0, 0,1, cpu, mps, cuda')
     parser.add_argument('--export_dir', type=str, default=str(Path(__file__).resolve().parent / 'exported_models'))
@@ -71,6 +136,10 @@ def main():
     parser.add_argument('--augment', action='store_true', help='enable stronger data augmentation')
     parser.add_argument('--cache', action='store_true', help='cache images for faster training')
     parser.add_argument('--workers', type=int, default=8, help='number of dataloader workers')
+    # Label remapping & safety
+    parser.add_argument('--auto-remap', action='store_true', help='Automatically remap label class ids based on species folder names before training')
+    parser.add_argument('--remap-no-backup', action='store_true', help='Do not write .bak backups during auto-remap')
+    parser.add_argument('--force', action='store_true', help='Force training even if a label sanity check looks wrong (e.g., all ids are 0)')
     args = parser.parse_args()
 
     data_yaml = Path(args.data).resolve()
@@ -119,6 +188,41 @@ def main():
                 pass
     except Exception:
         pass
+
+    # ----- Label sanity check and optional auto-remap -----
+    data_root = Path(__file__).resolve().parent.parent / 'data'
+    names = _load_names_from_yaml(data_yaml)
+    name2id = _build_name2id(names)
+
+    try:
+        unique_ids_before = _scan_unique_ids(data_root)
+        print(f"Label sanity check: unique class ids found before remap: {unique_ids_before}")
+        if args.auto_remap:
+            print('Auto-remap enabled: remapping label files to global ids based on species folder names...')
+            files_processed = 0
+            lines_changed = 0
+            for lbl in data_root.rglob('labels/*.txt'):
+                det = _detect_species_from_path(lbl, name2id)
+                if not det:
+                    continue
+                species, gid = det
+                changed = _remap_label_file(lbl, gid, backup=not args.remap_no_backup)
+                if changed:
+                    files_processed += 1
+                    lines_changed += changed
+            unique_ids_after = _scan_unique_ids(data_root)
+            print(f"Auto-remap complete. Files touched: {files_processed}, lines changed: {lines_changed}")
+            print(f"Unique class ids after remap: {unique_ids_after}")
+        else:
+            # If everything is class 0, warn and suggest options
+            if unique_ids_before == [0] and not args.force:
+                print('ERROR: All labels currently use class id 0. This usually means each species folder kept its local class index.\n'
+                      '       Run the remapper before training:')
+                print('       python .\\WildLens-Model\\scripts\\remap_labels.py')
+                print('       Or re-run train with --auto-remap, or override with --force to proceed anyway.')
+                return
+    except Exception as e:
+        print(f'WARN: Label sanity check failed: {e}')
 
     # Load base YOLOv8n model
     model = YOLO('yolov8n.pt')
@@ -169,6 +273,13 @@ def main():
     onnx_out = export_dir / 'model.onnx'
 
     # Export with robust params; ultralytics will create file inside export_dir
+    # Note: Ultralytics asserts optimize=True is not compatible with CUDA devices.
+    # To keep optimized ONNX while training on GPU, we export on CPU.
+    export_device = 'cpu'
+    if isinstance(dev, str) and dev.lower() == 'cpu' or (isinstance(dev, int) and not torch.cuda.is_available()):
+        export_device = 'cpu'
+    print(f"Exporting ONNX on device: {export_device} (optimize=True requires CPU)")
+
     best_model.export(
         format='onnx',
         imgsz=args.imgsz,
@@ -178,7 +289,7 @@ def main():
         optimize=True,
         half=False,
         int8=False,
-        device=dev,
+        device=export_device,
         project=str(export_dir),
         name='',
         exist_ok=True,
