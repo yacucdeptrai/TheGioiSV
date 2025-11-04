@@ -1,0 +1,12 @@
+# Unified dataset config for WildLens (centralized)
+# All image data is included in-repo under WildLens-Model/data/
+# This file points to the root-level train/valid/test splits.
+
+# Paths are relative to this YAML file's location (WildLens-Model/data/)
+train: train/images
+val: valid/images
+test: test/images
+
+# 30 classes used by WildLens
+nc: 30
+names: [Dog, Cat, Horse, Cow, Sheep, Pig, Chicken, Duck, Bird, Elephant, Lion, Tiger, Bear, Monkey, Deer, Fox, Wolf, Rabbit, Squirrel, Giraffe, Zebra, Kangaroo, Panda, Koala, Raccoon, Penguin, Dolphin, Whale, Turtle, Frog]
