@@ -42,8 +42,8 @@ def auto_device(user_device: str | None) -> str | int | None:
 
 def main():
     parser = argparse.ArgumentParser(description='WildLens: Train YOLOv8 on custom 30-species dataset and export ONNX + labels')
-    parser.add_argument('--data', type=str, default=str(Path(__file__).resolve().parent / 'data' / 'data.yaml'),
-                        help='Path to Roboflow data.yaml (default: ./data/data.yaml)')
+    parser.add_argument('--data', type=str, default=str(Path(__file__).resolve().parent.parent / 'data' / 'data.yaml'),
+                        help='Path to dataset data.yaml (centralized at WildLens-Model/data/data.yaml by default)')
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--imgsz', type=int, default=640)
     parser.add_argument('--batch', type=int, default=16)
