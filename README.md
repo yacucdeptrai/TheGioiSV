@@ -16,6 +16,9 @@ Quick links:
 - `WildLens-Model/` — Training code, ONNX export, and validation scripts.
 - `WildLens-App/` — MAUI mobile app that runs inference on the exported ONNX model.
 
+Note on generated folders/files:
+- During training, Ultralytics may create folders such as `WildLens-Model/scripts/train2` and `WildLens-Model/runs/detect/train*`. These contain training artifacts (plots, logs, `weights/best.pt`). They are safe to keep or delete and are not part of the source code.
+
 ---
 
 ## 1) WildLens-Model (Python / YOLOv8)
@@ -78,6 +81,11 @@ Artifacts:
 - `WildLens-Model/exported_models/model.onnx`
 - `WildLens-Model/exported_models/labels.txt`
 
+If you already have a trained `best.pt` and only want to export to ONNX:
+```powershell
+python .\scripts\export_onnx.py --weights .\scripts\train2\weights\best.pt --out .\exported_models\model.onnx --imgsz 640 --opset 12 --simplify --dynamic --optimize --device cpu
+```
+
 ### 1.4. Validate ONNX
 ```powershell
 python .\validate_onnx.py --model .\exported_models\model.onnx --labels .\exported_models\labels.txt --imgsz 640 --providers CPUExecutionProvider
@@ -118,6 +126,7 @@ For more app-specific details, see `WildLens-App/README.md`.
 - Training cannot find `data.yaml` → place it at `WildLens-Model/data/data.yaml` or pass `--data`.
 - ONNX validation issues → ensure `labels.txt` matches the dataset class order; retrain/export if needed.
 - GPU training → use `--device 0` (or `--device cpu`).
+- ONNX export path confusion → `train.py` normalizes the output to `WildLens-Model/exported_models/model.onnx`. If Ultralytics writes elsewhere (e.g., `scripts/train2/weights/best.onnx`), it will be copied there automatically.
 
 ---
 

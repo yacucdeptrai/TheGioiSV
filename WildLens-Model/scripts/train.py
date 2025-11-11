@@ -32,8 +32,16 @@ def _load_names_from_yaml(data_yaml: Path) -> list[str]:
     try:
         cfg = load_yaml(data_yaml)
         names = cfg.get('names')
+        # Handle dict form: {0: 'cls0', 1: 'cls1', ...} or {'0': 'cls0', ...}
+        if isinstance(names, dict) and names:
+            try:
+                items = sorted(((int(k), v) for k, v in names.items()), key=lambda t: t[0])
+                return [str(v).strip() for _, v in items]
+            except Exception:
+                # Fallback: keep insertion order of values
+                return [str(v).strip() for v in names.values()]
         if isinstance(names, list) and names:
-            return names
+            return [str(n).strip() for n in names if str(n).strip()]
     except Exception:
         pass
     return TARGET_CLASSES_30
@@ -119,7 +127,7 @@ def main():
     parser = argparse.ArgumentParser(description='WildLens: Train YOLOv8 on custom 30-species dataset and export ONNX + labels')
     parser.add_argument('--data', type=str, default=str(Path(__file__).resolve().parent.parent / 'data' / 'data.yaml'),
                         help='Path to dataset data.yaml (centralized at WildLens-Model/data/data.yaml by default)')
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--imgsz', type=int, default=320)
     parser.add_argument('--batch', type=int, default=16)
     parser.add_argument('--device', type=str, default=None, help='Device id or type: 0, 0,1, cpu, mps, cuda')
@@ -280,29 +288,78 @@ def main():
         export_device = 'cpu'
     print(f"Exporting ONNX on device: {export_device} (optimize=True requires CPU)")
 
-    best_model.export(
-        format='onnx',
-        imgsz=args.imgsz,
-        opset=12,
-        simplify=True,
-        dynamic=True,
-        optimize=True,
-        half=False,
-        int8=False,
-        device=export_device,
-        project=str(export_dir),
-        name='',
-        exist_ok=True,
-    )
+    # Perform export and capture the actual path returned by Ultralytics
+    try:
+        exported = best_model.export(
+            format='onnx',
+            imgsz=args.imgsz,
+            opset=12,
+            simplify=True,
+            dynamic=True,
+            optimize=True,
+            half=False,
+            int8=False,
+            device=export_device,
+            project=str(export_dir),
+            name='model',  # ensure deterministic filename 'model.onnx' in export_dir
+            exist_ok=True,
+        )
+    except Exception as e:
+        raise RuntimeError(f'ONNX export failed: {e}')
+
+    # Normalize the output location to export_dir/model.onnx even if Ultralytics wrote elsewhere
+    try:
+        exported_path = Path(exported).resolve()
+    except Exception:
+        exported_path = onnx_out if onnx_out.exists() else None
+
+    if exported_path and exported_path.exists() and exported_path != onnx_out:
+        try:
+            # Copy to the expected canonical location
+            import shutil
+            shutil.copyfile(exported_path, onnx_out)
+            print(f"Copied exported ONNX from {exported_path} to {onnx_out}")
+        except Exception as e:
+            print(f"WARN: Failed to copy exported ONNX to canonical path {onnx_out}: {e}")
 
     # The export API may save to export_dir/model.onnx; ensure it exists and move/rename if necessary
     if not onnx_out.exists():
+        # Fallback: try to find any .onnx in export_dir and normalize the name
         onnx_candidates = list(export_dir.glob('*.onnx'))
         if onnx_candidates:
-            onnx_candidates[0].rename(onnx_out)
+            try:
+                # Prefer copy to avoid cross-device rename issues
+                import shutil
+                shutil.copyfile(onnx_candidates[0], onnx_out)
+                print(f"Placed ONNX at {onnx_out} from {onnx_candidates[0]}")
+            except Exception as e:
+                print(f"WARN: Couldn't place ONNX at {onnx_out} from {onnx_candidates[0]}: {e}")
 
     if not onnx_out.exists():
-        raise RuntimeError('Failed to export ONNX model')
+        # As a last resort, try to detect common Ultralytics output locations (e.g., runs/*/weights/best.onnx)
+        candidates = []
+        try:
+            # search within scripts/ and runs/
+            scripts_dir = Path(__file__).resolve().parent
+            model_root = scripts_dir.parent
+            candidates += list(scripts_dir.rglob('weights/*.onnx'))
+            runs_dir = model_root / 'runs'
+            if runs_dir.exists():
+                candidates += list(runs_dir.rglob('weights/*.onnx'))
+        except Exception:
+            pass
+        if candidates:
+            # Pick most recent
+            candidates = sorted({p.resolve() for p in candidates if p.exists()}, key=lambda p: p.stat().st_mtime, reverse=True)
+            try:
+                import shutil
+                shutil.copyfile(candidates[0], onnx_out)
+                print(f"Recovered ONNX to {onnx_out} from {candidates[0]}")
+            except Exception:
+                pass
+
+    if not onnx_out.exists():
+        raise RuntimeError('Failed to export ONNX model (no .onnx found).')
 
     # Prepare labels.txt, prefer model.names else from data.yaml
     labels = None
@@ -313,15 +370,47 @@ def main():
         elif isinstance(mnames, list):
             labels = mnames
     if not labels:
-        data_cfg = load_yaml(data_yaml)
-        labels = data_cfg.get('names') or data_cfg.get('classes') or TARGET_CLASSES_30
+        # Load from YAML (supports both list and dict forms); fallback to TARGET_CLASSES_30
+        labels = _load_names_from_yaml(data_yaml)
+        # If YAML didn't have names but had an alternate key
+        try:
+            if not labels:
+                data_cfg = load_yaml(data_yaml)
+                alt = data_cfg.get('classes')
+                if isinstance(alt, list) and alt:
+                    labels = [str(n).strip() for n in alt]
+        except Exception:
+            pass
+
+    # Normalize, ensure non-empty strings
+    normalized_labels: list[str] = []
+    for i, n in enumerate(labels or []):
+        s = str(n).strip()
+        if not s:
+            s = f'class_{i}'
+        normalized_labels.append(s)
+    if not normalized_labels:
+        # Last resort fallback
+        normalized_labels = TARGET_CLASSES_30
 
     labels_txt = export_dir / 'labels.txt'
-    save_labels_txt(labels, labels_txt)
+    save_labels_txt(normalized_labels, labels_txt)
+
+    # Verify labels file is present and non-empty
+    try:
+        contents = [ln.strip() for ln in labels_txt.read_text(encoding='utf-8').splitlines() if ln.strip()]
+        if not contents:
+            raise RuntimeError('labels.txt exists but is empty')
+    except Exception as e:
+        raise RuntimeError(f'Failed to write a valid labels.txt at {labels_txt}: {e}')
 
     print('Export complete:')
     print(f'  ONNX:   {onnx_out}')
     print(f'  Labels: {labels_txt}')
+    # Helpful next-step hints
+    print(f"Predict:        yolo predict task=detect model={onnx_out} imgsz={args.imgsz}")
+    print(f"Validate:       yolo val task=detect model={onnx_out} imgsz={args.imgsz} data={data_yaml}")
+    print("Visualize:      https://netron.app")
 
 
 if __name__ == '__main__':
