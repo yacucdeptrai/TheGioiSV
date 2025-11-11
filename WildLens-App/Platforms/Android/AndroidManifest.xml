@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.wildlens">
+
+  <!-- Minimal manifest for .NET MAUI Android. Platform/SDK defaults (min/target SDK) are supplied by the MAUI SDK. -->
+
+  <!-- Camera access is commonly required for MAUI media/camera usage. Remove if not needed. -->
+  <uses-permission android:name="android.permission.CAMERA" />
+
+  <!-- Optional storage permissions for reading packaged assets or saving results on older Android versions. -->
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+
+  <!-- Declare camera hardware feature as optional so app can still install on devices without a camera. -->
+  <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+  <application
+      android:allowBackup="true"
+      android:usesCleartextTraffic="false">
+    <!-- The MAUI build will merge its own application entries here. -->
+  </application>
+
+</manifest>

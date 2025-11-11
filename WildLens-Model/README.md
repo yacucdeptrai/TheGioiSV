@@ -84,12 +84,12 @@ python .\scripts\export_onnx.py --weights .\scripts\train2\weights\best.pt --out
 ## 5) Validate ONNX
 Fast path (no arguments; auto-locates model and labels):
 ```powershell
-python .\validate_onnx.py
+python .\scripts\validate_onnx.py
 ```
 
 Explicit usage (specify size/providers):
 ```powershell
-python .\validate_onnx.py --model .\exported_models\model.onnx --labels .\exported_models\labels.txt --imgsz 640 --providers CPUExecutionProvider
+python .\scripts\validate_onnx.py --model .\exported_models\model.onnx --labels .\exported_models\labels.txt --imgsz 640 --providers CPUExecutionProvider
 ```
 What it does:
 - Verifies ONNX integrity with `onnx.checker`.

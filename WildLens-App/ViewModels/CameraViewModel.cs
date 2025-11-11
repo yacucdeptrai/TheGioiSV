@@ -2,9 +2,11 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Maui.Graphics;
+using Microsoft.Maui;
+using Microsoft.Maui.ApplicationModel;
 using WildLensApp.Models;
 using WildLensApp.Services;
+using SkiaSharp;
 
 namespace WildLensApp.ViewModels;
 
@@ -33,23 +35,28 @@ public partial class CameraViewModel : ObservableObject
         await stream.CopyToAsync(ms);
         var imageBytes = ms.ToArray();
 
-        // Load image to get RGBA buffer
-        var image = Microsoft.Maui.Graphics.Platform.PlatformImage.FromStream(new MemoryStream(imageBytes));
-        int width = (int)image.Width;
-        int height = (int)image.Height;
-        var rgba = image.AsImageSource().ToByteArray(); // fallback; platform-specific; may return null
-        if (rgba is null)
+        // Decode via SkiaSharp and extract RGBA32 pixel buffer
+        int width;
+        int height;
+        byte[] rgba;
+        using (var skStream = new SKMemoryStream(imageBytes))
+        using (var bmp = SKBitmap.Decode(skStream))
         {
-            // Fallback: create via Skia
-            using var skBitmap = new SkiaSharp.SKBitmap();
-            using var skStream = new SkiaSharp.SKMemoryStream(imageBytes);
-            if (SkiaSharp.SKBitmap.Decode(skStream) is { } bmp)
+            if (bmp == null) return;
+            width = bmp.Width;
+            height = bmp.Height;
+
+            // Ensure format is RGBA8888
+            if (bmp.ColorType != SKColorType.Rgba8888)
+            {
+                using var converted = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+                bmp.CopyTo(converted);
+                rgba = converted.Bytes.ToArray();
+            }
+            else
             {
                 rgba = bmp.Bytes.ToArray();
-                width = bmp.Width;
-                height = bmp.Height;
             }
-            else return;
         }
 
         var dets = await _inference.DetectAsync(rgba, width, height);

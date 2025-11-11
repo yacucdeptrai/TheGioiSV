@@ -5,9 +5,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewmodels="clr-namespace:WildLensApp.ViewModels"
     Title="History">
-    <ContentPage.BindingContext>
-        <viewmodels:HistoryViewModel />
-    </ContentPage.BindingContext>
 
     <Grid RowDefinitions="Auto,*" Padding="12">
         <Button Text="Refresh" Clicked="OnRefreshClicked"/>

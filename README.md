@@ -88,7 +88,7 @@ python .\scripts\export_onnx.py --weights .\scripts\train2\weights\best.pt --out
 
 ### 1.4. Validate ONNX
 ```powershell
-python .\validate_onnx.py --model .\exported_models\model.onnx --labels .\exported_models\labels.txt --imgsz 640 --providers CPUExecutionProvider
+python .\scripts\validate_onnx.py --model .\exported_models\model.onnx --labels .\exported_models\labels.txt --imgsz 640 --providers CPUExecutionProvider
 ```
 
 For more details, see `WildLens-Model/README.md`.

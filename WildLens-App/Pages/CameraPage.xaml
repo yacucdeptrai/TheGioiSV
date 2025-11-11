@@ -3,7 +3,6 @@
     x:Class="WildLensApp.Pages.CameraPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:viewmodels="clr-namespace:WildLensApp.ViewModels"
     Title="Camera">
 
@@ -17,11 +16,10 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <!-- Live camera preview (requires device/emulator with camera). -->
-            <toolkit:CameraView x:Name="Camera" Grid.Row="0" 
-                                HorizontalOptions="Fill" VerticalOptions="Fill"
-                                CaptureMode="Preview" 
-                                IsPreviewing="True"/>
+            <!-- Image placeholder for selected photo (replace with CameraView when available) -->
+            <Image x:Name="PreviewImage" Grid.Row="0"
+                   Aspect="AspectFill"
+                   HorizontalOptions="Fill" VerticalOptions="Fill"/>
 
             <!-- Overlay for detection boxes -->
             <GraphicsView x:Name="Overlay" Grid.Row="0"

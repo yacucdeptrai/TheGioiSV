@@ -24,6 +24,74 @@ dotnet build -t:Run -f net8.0-android
 dotnet build -t:Run -f net8.0-ios
 ```
 
+## Build APK (Android)
+There are two common outputs for Android:
+- APK: for local install/sideloading
+- AAB (Android App Bundle): for Play Store upload
+
+### 1) Quick debug APK (for local testing)
+```powershell
+cd WildLens-App
+dotnet publish -f net8.0-android -c Debug -p:AndroidPackageFormat=apk
+# Output (example): .\bin\Debug\net8.0-android\publish\com.example.wildlens-Signed.apk
+```
+
+### 2) Release APK (unsigned or signed)
+Unsigned release APK (useful for CI or manual signing later):
+```powershell
+cd WildLens-App
+dotnet publish -f net8.0-android -c Release -p:AndroidPackageFormat=apk
+# Output (examples):
+#   .\bin\Release\net8.0-android\publish\com.example.wildlens.apk
+#   .\bin\Release\net8.0-android\publish\com.example.wildlens-Signed.apk
+```
+
+Signed release APK (provide your keystore info via properties):
+```powershell
+cd WildLens-App
+dotnet publish -f net8.0-android -c Release -p:AndroidPackageFormat=apk `
+  -p:AndroidKeyStore=true `
+  -p:AndroidSigningKeyStore="C:\path\to\wildlens.keystore" `
+  -p:AndroidSigningKeyAlias="wildlens" `
+  -p:AndroidSigningKeyPass="<key_password>" `
+  -p:AndroidSigningStorePass="<store_password>"
+# Output (examples):
+#   .\bin\Release\net8.0-android\publish\com.example.wildlens.apk
+#   .\bin\Release\net8.0-android\publish\com.example.wildlens-Signed.apk
+```
+
+Generate a keystore (one-time) if you don’t have one yet:
+```powershell
+# Requires JDK's keytool in PATH
+keytool -genkey -v -keystore C:\path\to\wildlens.keystore -alias wildlens -keyalg RSA -keysize 2048 -validity 10000
+```
+
+### 3) Release AAB (for Play Store)
+```powershell
+cd WildLens-App
+dotnet publish -f net8.0-android -c Release -p:AndroidPackageFormat=aab
+# Output (examples):
+#   .\bin\Release\net8.0-android\publish\com.example.wildlens.aab
+#   .\bin\Release\net8.0-android\publish\com.example.wildlens-Signed.aab
+```
+
+Tip: You can also set signing properties in `WildLens-App.csproj` so you don’t pass them on the command line.
+
+## Install APK on a device/emulator
+1) Enable developer mode and USB debugging on the Android device (or start an emulator).
+2) Ensure the device/emulator is visible:
+```powershell
+adb devices
+```
+3) Install the APK (replace path as needed):
+```powershell
+adb install -r ".\bin\Debug\net8.0-android\publish\com.example.wildlens-Signed.apk"
+```
+Use the Release path for production builds, e.g.:
+```powershell
+adb install -r ".\bin\Release\net8.0-android\publish\com.example.wildlens-Signed.apk"
+```
+
 ## Permissions
 - Android: Camera and storage permissions are requested by MAUI automatically for CameraView/FilePicker. Ensure your emulator/device has a working camera.
 - iOS: Add usage descriptions if needed in `Info.plist` (MAUI templates inject defaults, but you may need to add `NSCameraUsageDescription`).

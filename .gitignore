@@ -1,0 +1,49 @@
+# === Root Git Ignore for TheGioiSV / WildLens ===
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+env/
+venv/
+.env
+
+# Datasets and training artifacts
+WildLens-Model/runs/
+WildLens-Model/scripts/train*/
+WildLens-Model/exported_models/*
+WildLens-Model/data/**
+!WildLens-Model/data/data.yaml
+
+# Node/npm (if any frontend tooling is added later)
+node_modules/
+
+# .NET / MAUI
+.vs/
+*.user
+*.suo
+*.userprefs
+**/bin/
+**/obj/
+
+# Android/MAUI specific
+WildLens-App/**/publish/**
+*.aab
+*.apk
+# Keystores (keep private outside VCS)
+*.keystore
+*.jks
+
+# Logs
+*.log
