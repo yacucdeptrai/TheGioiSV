@@ -26,16 +26,32 @@
   --space-12: 3rem;
 }
 
+/* Light theme overrides */
+html[data-theme="light"] {
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f8fafc;
+  --text: #0b1014;
+  --muted: #475569;
+  --primary: #0284c7;
+  --primary-700: #0369a1;
+  --accent: #16a34a;
+  --danger: #dc2626;
+  --border: #e5e7eb;
+  --shadow: 0 10px 20px rgba(0,0,0,.08);
+}
+
 /* 2) Reset */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; }
 html { color-scheme: dark; }
+html[data-theme="light"] { color-scheme: light; }
 body {
   margin: 0;
   line-height: 1.6;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: radial-gradient(1200px 1200px at 10% 0%, rgba(31,74,109,.35), transparent) no-repeat,
-              radial-gradient(1200px 1200px at 90% -20%, rgba(14,165,233,.25), transparent) no-repeat,
+  background: radial-gradient(1200px 1200px at 10% 0%, rgba(31,74,109,.20), transparent) no-repeat,
+              radial-gradient(1200px 1200px at 90% -20%, rgba(14,165,233,.18), transparent) no-repeat,
               var(--bg);
   color: var(--text);
 }

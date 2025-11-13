@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="site-footer" role="contentinfo">
       <div className="container footer-inner">
         <p>
-          © {new Date().getFullYear()} WildLens. Built with Next.js. 
+          © {new Date().getFullYear()} Sothanhtra - WildLens. Built with Next.js.
           <span className="muted"> Be kind to wildlife.</span>
         </p>
         <nav aria-label="Footer">

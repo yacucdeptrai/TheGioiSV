@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -40,17 +41,20 @@ export default function Header() {
           </ul>
         </nav>
 
-        <button
-          className="hamburger"
-          aria-label="Open menu"
-          aria-controls="mobile-menu"
-          aria-expanded={open}
-          onClick={() => setOpen(v => !v)}
-        >
-          <span className="hamburger-box" aria-hidden>
-            <span className="hamburger-inner" />
-          </span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <ThemeToggle variant="icon" />
+          <button
+            className="hamburger"
+            aria-label="Open menu"
+            aria-controls="mobile-menu"
+            aria-expanded={open}
+            onClick={() => setOpen(v => !v)}
+          >
+            <span className="hamburger-box" aria-hidden>
+              <span className="hamburger-inner" />
+            </span>
+          </button>
+        </div>
       </div>
 
       <div
@@ -65,6 +69,9 @@ export default function Header() {
           <li><a href="#upload" onClick={() => setOpen(false)}>Upload</a></li>
           <li><a href="#results" onClick={() => setOpen(false)}>Results</a></li>
           <li><a href="#about" onClick={() => setOpen(false)}>About</a></li>
+          <li>
+            <ThemeToggle />
+          </li>
         </ul>
       </div>
     </header>

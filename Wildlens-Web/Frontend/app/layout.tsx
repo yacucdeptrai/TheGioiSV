@@ -35,8 +35,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>        
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  try {
+    var ls = localStorage.getItem('theme');
+    var mql = window.matchMedia('(prefers-color-scheme: dark)');
+    var theme = ls || (mql.matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+  } catch (e) { /* noop */ }
+})();
+            `.trim()
+          }}
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Header />
         <main>
           {children}
