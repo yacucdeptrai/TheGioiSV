@@ -154,10 +154,7 @@ app = fastapi.FastAPI()
 
 # --- Cấu hình CORS ---
 # Cho phép Next.js (localhost:3000) gọi API này (localhost:8000)
-origins = [
-    "http://localhost:3000",
-    "http://localhost",
-]
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
