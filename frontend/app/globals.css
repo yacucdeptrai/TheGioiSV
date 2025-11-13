@@ -1,0 +1,52 @@
+/* Trong file page.module.css */
+.main {
+    padding: 2rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    color: #333;
+}
+
+.title {
+    color: #0070f3;
+}
+
+.fileInput {
+    margin: 1rem 0;
+    font-size: 1.1rem;
+}
+
+.canvas {
+    max-width: 100%;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    margin-top: 1rem;
+    background: #f9f9f9;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+.infoBox {
+    margin-top: 1.5rem;
+}
+
+.infoCard {
+    background: #f4f4f4;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.infoCard h3 {
+    margin-top: 0;
+    color: #0070f3;
+}
+
+.infoCard ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+}
