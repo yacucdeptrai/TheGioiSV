@@ -1,6 +1,6 @@
 ### WildLens-Web
 
-Modern, mobile‑first web interface and API for wildlife detection.
+Modern, mobile‑first web client and API for wildlife detection.
 
 Parts:
 - Frontend: Next.js (React 19) under `Wildlens-Web/Frontend`
@@ -8,7 +8,7 @@ Parts:
 
 Tip: From the repo root you can run one command to start everything and open the website:
 ```powershell
-./scripts/deploy-all.ps1
+./scripts/deploy-all.ps1 -OpenBrowser
 ```
 Frontend: http://localhost:3000
 Backend docs: http://127.0.0.1:8000/docs
@@ -25,12 +25,8 @@ Wildlens-Web/
 └─ Frontend/
    ├─ app/
    │  ├─ page.tsx           # Home page with upload + canvas results
-   │  ├─ layout.tsx         # Global layout incl. Header/Footer
-   │  └─ globals.css        # Design system and global styles
-   ├─ components/
-   │  ├─ Header.tsx
-   │  └─ Footer.tsx
-   ├─ public/
+   │  ├─ layout.tsx         # App layout
+   │  └─ page.module.css    # Styles for home page
    └─ package.json
 ```
 
@@ -40,21 +36,34 @@ Wildlens-Web/
 
 - Node.js ≥ 18 and npm ≥ 9
 - Python ≥ 3.10 (recommended 3.10/3.11)
-- Git (optional)
 
 On Windows, use PowerShell for the commands below.
 
 ---
 
-### Backend (FastAPI + ONNXRuntime)
+### Start via the root helper (recommended)
 
-Option A — via the root deploy script (recommended)
 ```powershell
 # From repo root
 ./scripts/deploy-all.ps1
 ```
 
-Option B — manual (advanced)
+What it does
+- Starts backend dev server at `http://127.0.0.1:8000`
+- Starts frontend dev server at `http://localhost:3000` with `NEXT_PUBLIC_API_URL`
+- Writes PID files to `./scripts/logs/backend.pid` and `./scripts/logs/frontend.pid`
+
+Useful commands
+```powershell
+./scripts/deploy-all.ps1 -Command status
+./scripts/deploy-all.ps1 -Command stop
+./scripts/deploy-all.ps1 -Command restart
+```
+
+---
+
+### Backend (manual)
+
 ```powershell
 # From repo root
 python -m venv .venv
@@ -66,41 +75,21 @@ cd ./Wildlens-Web/Backend
 python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-The API will be available at `http://127.0.0.1:8000`.
-
 Notes
 - Dependencies come from the repo root `requirements.txt` (shared by backend and model).
-- The service loads an ONNX model via ONNX Runtime. Place or configure your model path in `main.py` as needed.
-- `species.json` provides label details (VN name, habitat, etc.) used by the UI.
+- The service loads an ONNX model via ONNX Runtime. Configure model path in `main.py` as needed.
+- `species.json` provides label details (VN name, habitat, class, scientific name, etc.) used by the UI.
 
 ---
 
-### Frontend (Next.js)
-
-1) Install dependencies
+### Frontend (manual)
 
 ```powershell
 cd Wildlens-Web/Frontend
 npm install
-```
 
-2) Configure API URL (optional)
-
-By default, the frontend calls `http://127.0.0.1:8000`. To override, set `NEXT_PUBLIC_API_URL`:
-
-PowerShell (Windows)
-```powershell
-$Env:NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"; npm run dev
-```
-
-macOS/Linux
-```bash
-NEXT_PUBLIC_API_URL="http://127.0.0.1:8000" npm run dev
-```
-
-3) Start the dev server
-
-```powershell
+# Dev (PowerShell)
+$Env:NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
 npm run dev
 ```
 
@@ -113,17 +102,7 @@ Open the app at `http://localhost:3000`.
 - Upload an image (click or drag & drop).
 - The frontend sends the image to the FastAPI `/detect` endpoint.
 - The backend preprocesses to 320×320, runs YOLOv8 ONNX inference, postprocesses (score filter + NMS), rescales boxes, and returns detections with metadata from `species.json`.
-- The frontend draws the image and bounding boxes on a `<canvas>`, and lists detection details.
-
----
-
-### UI/UX highlights
-
-- Mobile‑first layout, responsive grid for results (canvas + info panel)
-- Sticky, accessible header with hamburger menu; keyboard and ESC support
-- Clear loading/error/empty states; improved contrast and focus styles
-- Centralized design tokens (colors, spacing, radii, shadows) in `globals.css`
-- Subtle transitions; respects reduced‑motion preferences
+- The frontend draws the image and bounding boxes on a canvas and shows rich species info (VN name, scientific name, class, diet, habitat, lifespan, conservation status, notes when available).
 
 ---
 
@@ -142,57 +121,14 @@ cd Wildlens-Web/Backend
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-For Docker, you can create simple Dockerfiles for each service and run them with a compose file mapping ports 3000 and 8000.
-
----
-
-### One-command deploy on Windows (PowerShell)
-
-For a quick local deployment that brings up both the backend (FastAPI) and frontend (Next.js) with sensible defaults, use the provided script:
-
-```powershell
-# From the repository root
-./scripts/deploy-all.ps1
-```
-
-What it does
-- Creates a Python virtual environment at repo root `.venv` (unless `-NoVenv`).
-- Installs root `requirements.txt` and frontend `npm` dependencies (use `-ReinstallDeps` to force).
-- Starts the backend at `http://127.0.0.1:8000` (dev uses `--reload`).
-- Sets `NEXT_PUBLIC_API_URL` and starts the frontend at `http://localhost:3000`.
-- Waits for readiness and prints PIDs and log file locations under `logs/`.
-
-Common options
-```powershell
-# Production-like run (no reload, Next.js production build/start):
-./scripts/deploy-all.ps1 -Mode prod -BackendHost 0.0.0.0 -BackendPort 8000 -FrontendPort 3000
-
-# Reinstall deps and auto-open browser:
-./scripts/deploy-all.ps1 -ReinstallDeps -OpenBrowser
-
-# Stop/restart/status for processes started by the script:
-./scripts/deploy-all.ps1 -Command stop
-./scripts/deploy-all.ps1 -Command restart
-./scripts/deploy-all.ps1 -Command status
-```
-
-Notes
-- If PowerShell blocks the script, run with `-ExecutionPolicy Bypass` once.
-- Logs are stored in `logs/backend.*.log` and `logs/frontend.*.log` at the repo root.
-- PIDs are stored in `.wildlens-state/pids.json` for the `-Command` actions to use.
-
 ---
 
 ### Troubleshooting
 
-- No module named 'uvicorn'
-  - Activate venv and run `pip install -r requirements.txt`.
-- CORS errors in browser console
-  - Ensure FastAPI has CORS enabled for `http://localhost:3000` and that the backend is reachable.
-- Frontend shows network error / 404
-  - Verify `NEXT_PUBLIC_API_URL` matches your backend URL; check the backend logs.
-- ONNX / OpenCV errors
-  - Confirm compatible versions in `requirements.txt`. Some ONNX models need specific opsets/providers.
+- No module named 'uvicorn' → Activate venv and run `pip install -r requirements.txt`.
+- CORS errors → Ensure FastAPI allows `http://localhost:3000` and the backend is reachable.
+- Frontend network error / 404 → Verify `NEXT_PUBLIC_API_URL`; check backend console output.
+- ONNX/OpenCV errors → Confirm compatible versions in `requirements.txt`.
 
 ---
 
@@ -210,8 +146,12 @@ Notes
       "confidence": 0.92,
       "details": {
         "vi_name": "Cáo",
+        "scientific_name": "Vulpes vulpes",
+        "class": "Mammalia",
+        "diet": "Omnivore",
         "habitat": "Rừng ôn đới",
         "lifespan": "3–6 năm",
+        "conservation_status": "Least Concern",
         "note": "Hoạt động về đêm."
       }
     }
@@ -223,21 +163,11 @@ Notes
 
 ### Bootstrap a new frontend (optional)
 
-You already have `Wildlens-Web/Frontend`. If you want to recreate a fresh app:
-
 ```powershell
 npx create-next-app@latest frontend
 ```
 
-Then move or adapt it under `Wildlens-Web/` and update `scripts/deploy-all.ps1` if needed.
-
----
-
-### Development tips
-
-- Keep backend and frontend in separate terminals during development.
-- Use browser devtools Network tab to inspect requests to `/detect`.
-- Adjust confidence/NMS thresholds in backend postprocessing if needed.
+Move it under `Wildlens-Web/` and adjust paths if you change folder names.
 
 ---
 

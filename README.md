@@ -5,7 +5,7 @@ Unified repository for the WildLens web experience:
 - Backend: FastAPI service under `Wildlens-Web/Backend`
 - Model: YOLOv8 training/export utilities under `WildLens-Model`
 
-This README explains how to set up, run, and open the website using a single command on Windows. It also shows how you could bootstrap a fresh Next.js app via `npx create-next-app@latest` if you ever want to recreate the frontend.
+This README explains how to set up, run, and open the website on Windows using the provided helper script or manual commands. It also shows how to bootstrap a fresh Next.js app via `npx create-next-app@latest` if you want to recreate the frontend.
 
 ---
 
@@ -14,14 +14,11 @@ This README explains how to set up, run, and open the website using a single com
   - `Backend/` — FastAPI + ONNX Runtime inference API
   - `Frontend/` — Next.js web client
 - `WildLens-Model/` — Training, export to ONNX, and validation scripts
-- `scripts/` — helper scripts, including `deploy-all.ps1`
+- `scripts/` — helper scripts (start/stop, etc.), including `deploy-all.ps1`
 - `requirements.txt` — unified Python dependencies for backend/model
-- `logs/` — runtime logs written by the deploy script
 
-Note on generated folders/files:
+Note about generated folders/files:
 - During training, Ultralytics may create folders such as `WildLens-Model/scripts/train2` and `WildLens-Model/runs/detect/train*`. These contain training artifacts (plots, logs, `weights/best.pt`). They are safe to keep or delete and are not part of the source code.
-
----
 
 ## Prerequisites
 - Windows PowerShell 5.1+
@@ -37,7 +34,7 @@ GPU/CPU note for inference dependencies:
 
 ## Quick start (recommended)
 
-Use the helper script to install dependencies, start backend and frontend, and open the website.
+Use the helper script to start the backend and frontend. Make sure you have installed Python dependencies at least once (see Manual setup below).
 
 ```powershell
 # From repo root
@@ -45,18 +42,12 @@ Use the helper script to install dependencies, start backend and frontend, and o
 ```
 
 What it does:
-- Creates a single virtual environment at repo root (`.venv`)
-- Installs Python deps from the root `requirements.txt`
-- Installs Node deps for the Next.js frontend
 - Starts FastAPI on `http://127.0.0.1:8000` and Next.js on `http://localhost:3000`
-- Saves PIDs so you can stop/restart later
-- Optionally opens the website automatically
+- Sets `NEXT_PUBLIC_API_URL` for the frontend process
+- Writes PID files so you can stop/restart later
+- Optionally opens the website automatically with `-OpenBrowser`
 
 Other useful commands:
-- Start in production mode (no auto-reload):
-  ```powershell
-  ./scripts/deploy-all.ps1 -Mode prod -BackendHost 0.0.0.0 -BackendPort 8000 -FrontendPort 3000
-  ```
 - Stop processes:
   ```powershell
   ./scripts/deploy-all.ps1 -Command stop
@@ -70,7 +61,7 @@ Other useful commands:
   ./scripts/deploy-all.ps1 -Command status
   ```
 
-Logs are written to `./logs/backend.*.log` and `./logs/frontend.*.log`.
+PID files are stored under `./scripts/logs/` as `backend.pid` and `frontend.pid`.
 
 Website URL:
 - Frontend: `http://localhost:3000`
@@ -80,7 +71,7 @@ Website URL:
 
 ## Manual setup (advanced)
 
-If you prefer to run parts manually.
+If you prefer to run parts manually or you need to install dependencies the first time.
 
 ### Backend (FastAPI)
 ```powershell
@@ -119,20 +110,23 @@ You already have a frontend in `Wildlens-Web/Frontend`. If you want to recreate 
 npx create-next-app@latest frontend
 ```
 
-This will create a new folder `frontend/` with a Next.js starter. You can then move it under `Wildlens-Web/` or adapt the `scripts/deploy-all.ps1` script to point at the new path.
+This will create a new folder `frontend/` with a Next.js starter. You can then move it under `Wildlens-Web/` or adapt `scripts/deploy-all.ps1` paths if you change the folder name.
 
 ---
 
 ## Troubleshooting
+- First run errors (missing packages): activate your venv and run `pip install -r requirements.txt` in the repo root.
 - Locked old virtualenv (Windows): close any running Python/IDE processes, then remove `Wildlens-Web/Backend/.venv` if it still exists.
-- Port in use: change `-BackendPort` / `-FrontendPort` or stop the conflicting app.
+- Port in use: change `-BackendPort` (script parameter) or stop the conflicting app. Frontend uses port 3000 by default.
 - Frontend can’t reach backend: ensure `NEXT_PUBLIC_API_URL` matches your backend host/port.
-- Check logs: see `./logs/` for `backend.out.log`, `backend.err.log`, `frontend.out.log`, `frontend.err.log`.
+- PID files: see `./scripts/logs/backend.pid` and `./scripts/logs/frontend.pid`. If a PID file exists but the process is gone, run `-Command status` and then `-Command start`.
 
 ---
 
 ## Links
-- Backend and Frontend guide: `./Wildlens-Web/README.md`
+- Web (overview, API, tips): `./Wildlens-Web/README.md`
+- Backend details: `./Wildlens-Web/Backend/README.md`
+- Frontend details: `./Wildlens-Web/Frontend/README.md`
 - Model training/export: `./WildLens-Model/README.md`
 
 ---
