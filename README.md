@@ -1,134 +1,141 @@
-# TheGioiSV — WildLens (Two-Part Project)
+# TheGioiSV — WildLens (Web + Backend + Model)
 
-WildLens is a two-part project:
-- WildLens-Model: a Python project to train a YOLOv8 object detection model for 30 animal species and export the final ONNX model + labels.
-- WildLens-App: a .NET MAUI mobile app that performs real-time camera detection using the exported ONNX model.
+Unified repository for the WildLens web experience:
+- Frontend: Next.js app (React 19) under `Wildlens-Web/Frontend`
+- Backend: FastAPI service under `Wildlens-Web/Backend`
+- Model: YOLOv8 training/export utilities under `WildLens-Model`
 
-This README gives you an end-to-end view: environment setup, data preparation, training/export, ONNX validation, and MAUI app integration.
-
-Quick links:
-- WildLens-Model README: `./WildLens-Model/README.md`
-- WildLens-App README: `./WildLens-App/README.md`
+This README explains how to set up, run, and open the website using a single command on Windows. It also shows how you could bootstrap a fresh Next.js app via `npx create-next-app@latest` if you ever want to recreate the frontend.
 
 ---
 
-## Repository Structure
-- `WildLens-Model/` — Training code, ONNX export, and validation scripts.
-- `WildLens-App/` — MAUI mobile app that runs inference on the exported ONNX model.
+## Repository structure
+- `Wildlens-Web/`
+  - `Backend/` — FastAPI + ONNX Runtime inference API
+  - `Frontend/` — Next.js web client
+- `WildLens-Model/` — Training, export to ONNX, and validation scripts
+- `scripts/` — helper scripts, including `deploy-all.ps1`
+- `requirements.txt` — unified Python dependencies for backend/model
+- `logs/` — runtime logs written by the deploy script
 
 Note on generated folders/files:
 - During training, Ultralytics may create folders such as `WildLens-Model/scripts/train2` and `WildLens-Model/runs/detect/train*`. These contain training artifacts (plots, logs, `weights/best.pt`). They are safe to keep or delete and are not part of the source code.
 
 ---
 
-## 1) WildLens-Model (Python / YOLOv8)
+## Prerequisites
+- Windows PowerShell 5.1+
+- Python 3.10 or 3.11 on PATH
+- Node.js 18+ (20+ recommended) which includes `npm`
+- Optional: NVIDIA GPU with CUDA drivers if you plan to use GPU acceleration
 
-Location: `./WildLens-Model`
-
-### 1.1. Environment
-- Python 3.10+ is recommended.
-- Create and activate a venv:
-  ```powershell
-  cd .\WildLens-Model
-  python -m venv .venv
-  .\.venv\Scripts\Activate.ps1
-  pip install --upgrade pip
-  pip install -r requirements.txt
-  ```
-
-### 1.1.a GPU Setup (CUDA)
-- Quick installer (recommended):
-  ```powershell
-  # Inside the WildLens-Model virtualenv
-  python .\WildLens-Model\scripts\install_torch_cuda.py --yes
-  ```
-  This detects your CUDA with `nvidia-smi` and installs matching CUDA wheels for PyTorch (torch/vision/audio).
-- Manual install (alternative):
-  ```powershell
-  # CUDA 12.1 wheels
-  pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio
-  # or CUDA 12.4 wheels
-  pip install --index-url https://download.pytorch.org/whl/cu124 torch torchvision torchaudio
-  ```
-- Ensure GPU-enabled ONNX Runtime is installed (requirements include `onnxruntime-gpu`). If you previously installed CPU-only ORT, uninstall it first to avoid conflicts:
-  ```powershell
-  pip uninstall -y onnxruntime
-  pip install -U onnxruntime-gpu
-  ```
-- Verify GPU availability:
-  ```powershell
-  python .\WildLens-Model\scripts\check_gpu.py
-  ```
-- If ONNX shows `CUDAExecutionProvider` but PyTorch says `CUDA available: False`, re-run the installer above.
-
-### 1.2. Data
-- Source: Roboflow export for 30 species. Place the dataset (images, labels, `data.yaml`) under `WildLens-Model/data/`.
-- Default YAML path: `WildLens-Model/data/data.yaml` (override with `--data` if needed).
-
-### 1.3. Train and Export ONNX
-```powershell
-# From project root or WildLens-Model folder
-cd .\WildLens-Model
-.\.venv\Scripts\Activate.ps1  # if not already active
-
-# Train using default data path .\data\data.yaml
-python .\train.py --epochs 50 --imgsz 640 --batch 16
-
-# Or specify a custom data.yaml and GPU
-python .\train.py --data .\data\data.yaml --epochs 100 --imgsz 640 --batch 32 --device 0 --augment --cache --cos_lr
-```
-Artifacts:
-- `WildLens-Model/exported_models/model.onnx`
-- `WildLens-Model/exported_models/labels.txt`
-
-If you already have a trained `best.pt` and only want to export to ONNX:
-```powershell
-python .\scripts\export_onnx.py --weights .\scripts\train2\weights\best.pt --out .\exported_models\model.onnx --imgsz 640 --opset 12 --simplify --dynamic --optimize --device cpu
-```
-
-### 1.4. Validate ONNX
-```powershell
-python .\scripts\validate_onnx.py --model .\exported_models\model.onnx --labels .\exported_models\labels.txt --imgsz 640 --providers CPUExecutionProvider
-```
-
-For more details, see `WildLens-Model/README.md`.
+GPU/CPU note for inference dependencies:
+- By default we use `onnxruntime-gpu` in `requirements.txt`. For CPU-only machines, replace it with `onnxruntime`.
+- Ultralytics may pull a CPU-only Torch. For CUDA-enabled Torch, see the note in `WildLens-Model/README.md`.
 
 ---
 
-## 2) WildLens-App (.NET MAUI)
+## Quick start (recommended)
 
-Location: `./WildLens-App`
+Use the helper script to install dependencies, start backend and frontend, and open the website.
 
-### 2.1. Model Integration
-- Copy these files into `WildLens-App/Resources/Assets/`:
-  - `WildLens-Model/exported_models/model.onnx`
-  - `WildLens-Model/exported_models/labels.txt`
-- Ensure their Build Action is `MauiAsset` in `WildLens-App.csproj`.
-
-### 2.2. Build & Run
 ```powershell
-cd .\WildLens-App
-# Restore NuGet packages
-dotnet restore
-
-# Run on Android emulator/device
-dotnet build -t:Run -f net8.0-android
-
-# Or run on iOS (from macOS with required setup)
-dotnet build -t:Run -f net8.0-ios
+# From repo root
+./scripts/deploy-all.ps1
 ```
 
-For more app-specific details, see `WildLens-App/README.md`.
+What it does:
+- Creates a single virtual environment at repo root (`.venv`)
+- Installs Python deps from the root `requirements.txt`
+- Installs Node deps for the Next.js frontend
+- Starts FastAPI on `http://127.0.0.1:8000` and Next.js on `http://localhost:3000`
+- Saves PIDs so you can stop/restart later
+- Optionally opens the website automatically
+
+Other useful commands:
+- Start in production mode (no auto-reload):
+  ```powershell
+  ./scripts/deploy-all.ps1 -Mode prod -BackendHost 0.0.0.0 -BackendPort 8000 -FrontendPort 3000
+  ```
+- Stop processes:
+  ```powershell
+  ./scripts/deploy-all.ps1 -Command stop
+  ```
+- Restart processes:
+  ```powershell
+  ./scripts/deploy-all.ps1 -Command restart
+  ```
+- Status (shows PIDs):
+  ```powershell
+  ./scripts/deploy-all.ps1 -Command status
+  ```
+
+Logs are written to `./logs/backend.*.log` and `./logs/frontend.*.log`.
+
+Website URL:
+- Frontend: `http://localhost:3000`
+- Backend docs (Swagger): `http://127.0.0.1:8000/docs`
 
 ---
 
-## 3) Troubleshooting
-- Training cannot find `data.yaml` → place it at `WildLens-Model/data/data.yaml` or pass `--data`.
-- ONNX validation issues → ensure `labels.txt` matches the dataset class order; retrain/export if needed.
-- GPU training → use `--device 0` (or `--device cpu`).
-- ONNX export path confusion → `train.py` normalizes the output to `WildLens-Model/exported_models/model.onnx`. If Ultralytics writes elsewhere (e.g., `scripts/train2/weights/best.onnx`), it will be copied there automatically.
+## Manual setup (advanced)
+
+If you prefer to run parts manually.
+
+### Backend (FastAPI)
+```powershell
+# From repo root
+python -m venv .venv
+./.venv/Scripts/Activate.ps1
+pip install --upgrade pip
+pip install -r ./requirements.txt
+
+# Run API
+cd ./Wildlens-Web/Backend
+python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+```
+Open: `http://127.0.0.1:8000/docs`
+
+### Frontend (Next.js)
+```powershell
+cd ./Wildlens-Web/Frontend
+npm install
+
+# Dev
+$Env:NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
+npm run dev
+
+# Open website
+Start-Process http://localhost:3000
+```
 
 ---
 
-## 4) License
-This repository is provided for educational purposes. Review the licenses of all dependencies (Ultralytics, ONNX Runtime, .NET MAUI, etc.) before distribution.
+## Bootstrap a fresh Next.js app (optional)
+
+You already have a frontend in `Wildlens-Web/Frontend`. If you want to recreate or start a new one, here’s the official bootstrap command:
+
+```powershell
+npx create-next-app@latest frontend
+```
+
+This will create a new folder `frontend/` with a Next.js starter. You can then move it under `Wildlens-Web/` or adapt the `scripts/deploy-all.ps1` script to point at the new path.
+
+---
+
+## Troubleshooting
+- Locked old virtualenv (Windows): close any running Python/IDE processes, then remove `Wildlens-Web/Backend/.venv` if it still exists.
+- Port in use: change `-BackendPort` / `-FrontendPort` or stop the conflicting app.
+- Frontend can’t reach backend: ensure `NEXT_PUBLIC_API_URL` matches your backend host/port.
+- Check logs: see `./logs/` for `backend.out.log`, `backend.err.log`, `frontend.out.log`, `frontend.err.log`.
+
+---
+
+## Links
+- Backend and Frontend guide: `./Wildlens-Web/README.md`
+- Model training/export: `./WildLens-Model/README.md`
+
+---
+
+## License
+This repository is provided for educational purposes. Review third‑party licenses (Ultralytics, ONNX Runtime, Next.js/React, etc.) before distribution.

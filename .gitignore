@@ -26,7 +26,7 @@ WildLens-Model/exported_models/*
 WildLens-Model/data/**
 !WildLens-Model/data/data.yaml
 
-# Node/npm (if any frontend tooling is added later)
+# Node/npm (if any Frontend tooling is added later)
 node_modules/
 
 # .NET / MAUI

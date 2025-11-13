@@ -21,6 +21,7 @@ Notes about extra/generated folders:
 
 ## 2) Environment
 - Python 3.10+ is recommended.
+- Dependency note: the repository now uses a unified `requirements.txt` at the repo root for backend/inference work. You may continue to use this subproject's `requirements.txt` for model training workflows, or you can install from the root file if you prefer one environment for the whole repo.
 - Create and activate a virtual environment on Windows PowerShell:
   ```powershell
   cd .\WildLens-Model
@@ -29,6 +30,19 @@ Notes about extra/generated folders:
   pip install --upgrade pip
   pip install -r requirements.txt
   ```
+
+Alternative (use the repo-root environment and requirements):
+```powershell
+# From repo root
+python -m venv .venv
+./.venv/Scripts/Activate.ps1
+pip install --upgrade pip
+pip install -r ./requirements.txt
+
+# Now you can run training scripts from this folder using the root venv
+cd ./WildLens-Model
+python ./train.py --help
+```
 
 ### 2.1 GPU Setup (CUDA)
 - Quick installer (recommended):

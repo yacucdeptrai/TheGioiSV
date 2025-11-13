@@ -1,0 +1,212 @@
+{
+  "Dog": {
+    "name": "Dog",
+    "vi_name": "Chó",
+    "habitat": "Nhà ở, khu dân cư",
+    "lifespan": "10 - 13 năm",
+    "note": "Trung thành, thính giác nhạy bén."
+  },
+  "Cat": {
+    "name": "Cat",
+    "vi_name": "Mèo",
+    "habitat": "Nhà ở, khu dân cư",
+    "lifespan": "12 - 18 năm",
+    "note": "Leo trèo giỏi, ngủ nhiều, săn chuột."
+  },
+  "Horse": {
+    "name": "Horse",
+    "vi_name": "Ngựa",
+    "habitat": "Đồng cỏ, trang trại",
+    "lifespan": "25 - 30 năm",
+    "note": "Chạy nhanh, ngủ đứng."
+  },
+  "Cow": {
+    "name": "Cow",
+    "vi_name": "Bò",
+    "habitat": "Đồng cỏ, trang trại",
+    "lifespan": "15 - 20 năm",
+    "note": "Loài nhai lại, sống theo đàn."
+  },
+  "Sheep": {
+    "name": "Sheep",
+    "vi_name": "Cừu",
+    "habitat": "Đồng cỏ, đồi núi",
+    "lifespan": "10 - 12 năm",
+    "note": "Lông dày (len), tính bầy đàn cao."
+  },
+  "Pig": {
+    "name": "Pig",
+    "vi_name": "Lợn",
+    "habitat": "Chuồng trại, rừng (lợn rừng)",
+    "lifespan": "15 - 20 năm",
+    "note": "Thông minh, ăn tạp, khứu giác tốt."
+  },
+  "Chicken": {
+    "name": "Chicken",
+    "vi_name": "Gà",
+    "habitat": "Trang trại, vườn",
+    "lifespan": "5 - 10 năm",
+    "note": "Báo thức (gà trống), đẻ trứng hàng ngày."
+  },
+  "Duck": {
+    "name": "Duck",
+    "vi_name": "Vịt",
+    "habitat": "Ao hồ, đầm lầy",
+    "lifespan": "5 - 10 năm",
+    "note": "Lông không thấm nước, chân có màng bơi."
+  },
+  "Bird": {
+    "name": "Bird",
+    "vi_name": "Chim",
+    "habitat": "Đa dạng (rừng, trời, phố)",
+    "lifespan": "Đa dạng",
+    "note": "Có lông vũ, mỏ sừng, hầu hết biết bay."
+  },
+  "Elephant": {
+    "name": "Elephant",
+    "vi_name": "Voi",
+    "habitat": "Rừng nhiệt đới, xavan",
+    "lifespan": "60 - 70 năm",
+    "note": "Động vật trên cạn lớn nhất, có vòi, trí nhớ tốt."
+  },
+  "Lion": {
+    "name": "Lion",
+    "vi_name": "Sư tử",
+    "habitat": "Xavan, đồng cỏ",
+    "lifespan": "10 - 14 năm",
+    "note": "Sống theo bầy đàn, con đực có bờm."
+  },
+  "Tiger": {
+    "name": "Tiger",
+    "vi_name": "Hổ",
+    "habitat": "Rừng rậm, rừng ngập mặn",
+    "lifespan": "10 - 15 năm",
+    "note": "Sống đơn độc, bộ lông vằn ngụy trang."
+  },
+  "Bear": {
+    "name": "Bear",
+    "vi_name": "Gấu",
+    "habitat": "Rừng, núi, vùng băng tuyết",
+    "lifespan": "20 - 25 năm",
+    "note": "Ngủ đông (một số loài), khứu giác cực tốt."
+  },
+  "Monkey": {
+    "name": "Monkey",
+    "vi_name": "Khỉ",
+    "habitat": "Rừng nhiệt đới, núi",
+    "lifespan": "15 - 30 năm",
+    "note": "Leo trèo giỏi, tay linh hoạt, sống bầy đàn."
+  },
+  "Deer": {
+    "name": "Deer",
+    "vi_name": "Hươu",
+    "habitat": "Rừng, bìa rừng",
+    "lifespan": "10 - 20 năm",
+    "note": "Con đực thường có sừng rụng hàng năm."
+  },
+  "Fox": {
+    "name": "Fox",
+    "vi_name": "Cáo",
+    "habitat": "Rừng, khu dân cư, đồi cát",
+    "lifespan": "2 - 5 năm",
+    "note": "Nhanh nhẹn, ranh mãnh, tai lớn."
+  },
+  "Wolf": {
+    "name": "Wolf",
+    "vi_name": "Sói",
+    "habitat": "Rừng, vùng núi, tuyết",
+    "lifespan": "6 - 8 năm",
+    "note": "Săn mồi theo bầy, tiếng hú đặc trưng."
+  },
+  "Rabbit": {
+    "name": "Rabbit",
+    "vi_name": "Thỏ",
+    "habitat": "Hang dưới đất, đồng cỏ",
+    "lifespan": "8 - 12 năm",
+    "note": "Tai dài, di chuyển bằng cách nhảy."
+  },
+  "Squirrel": {
+    "name": "Squirrel",
+    "vi_name": "Sóc",
+    "habitat": "Cây cối, công viên",
+    "lifespan": "5 - 10 năm",
+    "note": "Đuôi xù giữ thăng bằng, thích tích trữ hạt."
+  },
+  "Giraffe": {
+    "name": "Giraffe",
+    "vi_name": "Hươu cao cổ",
+    "habitat": "Xavan, đồng cỏ thưa",
+    "lifespan": "~25 năm",
+    "note": "Cổ siêu dài, lưỡi dài màu xanh tím."
+  },
+  "Zebra": {
+    "name": "Zebra",
+    "vi_name": "Ngựa vằn",
+    "habitat": "Xavan, đồng cỏ",
+    "lifespan": "~25 năm",
+    "note": "Bộ lông sọc đen trắng độc nhất."
+  },
+  "Kangaroo": {
+    "name": "Kangaroo",
+    "vi_name": "Chuột túi",
+    "habitat": "Đồng cỏ Úc (Bushland)",
+    "lifespan": "6 - 20 năm",
+    "note": "Di chuyển bằng hai chân sau, nuôi con trong túi."
+  },
+  "Panda": {
+    "name": "Panda",
+    "vi_name": "Gấu trúc",
+    "habitat": "Rừng tre trúc (Trung Quốc)",
+    "lifespan": "~20 năm",
+    "note": "Chỉ ăn tre trúc, lông đen trắng đặc trưng."
+  },
+  "Koala": {
+    "name": "Koala",
+    "vi_name": "Gấu túi",
+    "habitat": "Rừng bạch đàn Úc",
+    "lifespan": "13 - 18 năm",
+    "note": "Ngủ tới 18-22h/ngày, chỉ ăn lá bạch đàn."
+  },
+  "Raccoon": {
+    "name": "Raccoon",
+    "vi_name": "Gấu mèo",
+    "habitat": "Rừng, thành phố",
+    "lifespan": "2 - 3 năm",
+    "note": "\"Đeo mặt nạ\" đen, ngón tay khéo léo."
+  },
+  "Penguin": {
+    "name": "Penguin",
+    "vi_name": "Chim cánh cụt",
+    "habitat": "Nam Cực, bờ biển lạnh",
+    "lifespan": "15 - 20 năm",
+    "note": "Chim không bay được nhưng bơi lặn cực giỏi."
+  },
+  "Dolphin": {
+    "name": "Dolphin",
+    "vi_name": "Cá heo",
+    "habitat": "Đại dương, biển",
+    "lifespan": "40 - 60 năm",
+    "note": "Rất thông minh, định vị bằng sóng âm."
+  },
+  "Whale": {
+    "name": "Whale",
+    "vi_name": "Cá voi",
+    "habitat": "Đại dương",
+    "lifespan": "30 - 90 năm",
+    "note": "Kích thước khổng lồ, giao tiếp bằng \"bài hát\"."
+  },
+  "Turtle": {
+    "name": "Turtle",
+    "vi_name": "Rùa",
+    "habitat": "Cả trên cạn và dưới nước",
+    "lifespan": "30 - 80+ năm",
+    "note": "Có mai cứng bảo vệ, di chuyển chậm chạp."
+  },
+  "Frog": {
+    "name": "Frog",
+    "vi_name": "Ếch",
+    "habitat": "Đầm lầy, ao hồ, nơi ẩm ướt",
+    "lifespan": "5 - 10 năm",
+    "note": "Lưỡng cư, da ẩm ướt."
+  }
+}

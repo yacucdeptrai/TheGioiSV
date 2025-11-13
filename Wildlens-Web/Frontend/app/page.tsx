@@ -1,0 +1,257 @@
+'use client';
+
+import { useState, useRef, useEffect, ChangeEvent, DragEvent } from 'react';
+import styles from './page.module.css';
+
+// --- Định nghĩa "kiểu" dữ liệu cho TypeScript ---
+
+// 1. Định nghĩa kiểu cho 1 đối tượng được phát hiện
+interface DetectionDetail {
+    vi_name: string;
+    habitat: string;
+    lifespan: string;
+    note: string;
+}
+
+interface DetectionResult {
+    box: [number, number, number, number]; // [x1, y1, x2, y2]
+    label: string;
+    confidence: number;
+    details: DetectionDetail;
+}
+
+// 2. Định nghĩa kiểu cho API response
+interface ApiResponse {
+    detections: DetectionResult[];
+}
+
+// --- Component chính ---
+export default function Home() {
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [detections, setDetections] = useState<DetectionResult[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [imgSrc, setImgSrc] = useState<string | null>(null); // Để lưu ảnh gốc
+    const [isDragOver, setIsDragOver] = useState<boolean>(false);
+
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    // Hàm xử lý khi người dùng chọn file
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]; // Lấy file đầu tiên
+        if (file) {
+            setSelectedFile(file);
+            setDetections([]); // Xóa kết quả cũ
+            setError(null);
+            
+            const reader = new FileReader();
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+                // e.target.result là một string (data URL)
+                setImgSrc(e.target?.result as string); 
+            };
+            reader.readAsDataURL(file);
+            
+            // Tự động gọi nhận diện khi chọn ảnh
+            handleDetection(file);
+        }
+    };
+
+    // Drag and Drop handlers
+    const onDrop = (e: DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+            const fakeEvent = { target: { files: [file] } } as unknown as ChangeEvent<HTMLInputElement>;
+            handleFileChange(fakeEvent);
+        }
+    };
+    const onDragOver = (e: DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+    const onDragLeave = () => setIsDragOver(false);
+
+    // Hàm gửi ảnh đi để nhận diện
+    const handleDetection = async (fileToUpload: File) => {
+        if (!fileToUpload) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        const formData = new FormData();
+        formData.append("file", fileToUpload);
+
+        try {
+            // Gọi đến Backend FastAPI (đang chạy trên port 8000)
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
+            const response = await fetch(`${apiUrl}/detect`, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error(`Lỗi từ server: ${response.statusText}`);
+            }
+
+            const data: ApiResponse = await response.json();
+            setDetections(data.detections || []);
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message || "Có lỗi xảy ra khi gọi API. Đảm bảo Backend đang chạy.");
+            } else {
+                setError("Có lỗi không xác định xảy ra.");
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Hàm vẽ kết quả lên canvas
+    useEffect(() => {
+        // Đảm bảo canvas đã sẵn sàng
+        if (!canvasRef.current) return;
+        
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) return; // Không thể lấy context
+        
+        if (imgSrc) {
+            const img = new Image();
+            img.onload = () => {
+                // Set kích thước canvas bằng kích thước ảnh gốc
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // 1. Vẽ ảnh gốc lên
+                ctx.drawImage(img, 0, 0);
+
+                // 2. Vẽ các hộp Bounding Box
+                detections.forEach((det: DetectionResult) => {
+                    const { box, label, confidence } = det;
+                    
+                    // box = [x1, y1, x2, y2]
+                    ctx.strokeStyle = '#00FF00'; // Màu xanh lá
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(box[0], box[1], box[2] - box[0], box[3] - box[1]);
+                    
+                    // Vẽ nền cho text
+                    ctx.fillStyle = '#00FF00';
+                    const text = `${label} (${(confidence * 100).toFixed(0)}%)`;
+                    ctx.font = '18px Arial';
+                    const textMetrics = ctx.measureText(text);
+                    const textWidth = textMetrics.width;
+                    
+                    const textX = box[0];
+                    const textY = box[1] > 20 ? box[1] - 20 : box[1];
+
+                    ctx.fillRect(textX, textY, textWidth + 4, 20);
+                    
+                    // Vẽ text
+                    ctx.fillStyle = '#000000'; // Màu chữ đen
+                    ctx.fillText(
+                        text, 
+                        textX + 2, 
+                        textY + 15
+                    );
+                });
+            };
+            img.src = imgSrc;
+        } else {
+            // Xóa canvas nếu không có ảnh
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+    }, [imgSrc, detections]); // Chạy lại khi 2 giá trị này thay đổi
+
+    return (
+        <div className="container">
+            <section id="upload" className={styles.section} aria-labelledby="upload-title">
+                <h1 id="upload-title" className={styles.title}>WildLens — Nhận diện Động vật</h1>
+                <p className={styles.subtitle}>Chụp ảnh hoặc tải ảnh lên để hệ thống AI nhận diện loài động vật trong hình.</p>
+
+                <div 
+                  className={`${styles.dropzone} dropzone ${isDragOver ? 'dragover' : ''}`} 
+                  onDrop={onDrop} 
+                  onDragOver={onDragOver} 
+                  onDragLeave={onDragLeave}
+                  role="button"
+                  aria-label="Kéo thả ảnh vào đây để tải lên"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      const input = document.getElementById('file-input') as HTMLInputElement | null;
+                      input?.click();
+                    }
+                  }}
+                >
+                  <div className={styles.dropInner}>
+                    <p><strong>Kéo & thả ảnh</strong> vào đây hoặc</p>
+                    <label htmlFor="file-input" className="btn primary" aria-label="Chọn ảnh từ máy">Chọn ảnh</label>
+                    <input
+                      id="file-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="visually-hidden"
+                    />
+                    <p className="muted" aria-live="polite">Hỗ trợ JPG, PNG. Kích thước tối đa phụ thuộc trình duyệt.</p>
+                  </div>
+                </div>
+
+                {isLoading && <div className={styles.banner} role="status">Đang xử lý... Vui lòng chờ.</div>}
+                {error && <div className={`${styles.banner} ${styles.error}`} role="alert">{error}</div>}
+            </section>
+
+            <section id="results" className={styles.section} aria-labelledby="results-title">
+                <h2 id="results-title" className={styles.sectionTitle}>Kết quả</h2>
+
+                <div className={styles.resultsGrid}>
+                    <figure className={styles.canvasCard} aria-labelledby="figure-caption">
+                        <canvas 
+                          ref={canvasRef} 
+                          className={styles.canvas}
+                          aria-label={imgSrc ? 'Ảnh đã tải lên với khung nhận diện' : 'Chưa có ảnh để hiển thị'}
+                          role="img"
+                        />
+                        <figcaption id="figure-caption" className="visually-hidden">
+                          Ảnh gốc và các khung bao của các đối tượng được nhận diện.
+                        </figcaption>
+                    </figure>
+
+                    <div className={styles.infoBox}>
+                        {!imgSrc && (
+                          <p className="muted">Chưa có ảnh. Hãy tải ảnh ở phần trên.</p>
+                        )}
+                        {detections.length === 0 && imgSrc && !isLoading && (
+                            <div className={styles.empty}>
+                              <p>Không phát hiện thấy động vật nào trong ảnh này.</p>
+                            </div>
+                        )}
+                        {detections.map((det: DetectionResult, index: number) => (
+                            <article key={index} className={styles.infoCard} aria-labelledby={`det-${index}-title`}>
+                                <h3 id={`det-${index}-title`}>
+                                  {det.details.vi_name} <span className={styles.label}>({det.label})</span>
+                                  <span className={styles.conf}> {(det.confidence * 100).toFixed(0)}%</span>
+                                </h3>
+                                <ul className={styles.detailsList}>
+                                    <li><strong>Nơi sống:</strong> {det.details.habitat}</li>
+                                    <li><strong>Tuổi thọ:</strong> {det.details.lifespan}</li>
+                                    <li><strong>Ghi chú:</strong> {det.details.note}</li>
+                                </ul>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section id="about" className={styles.section} aria-labelledby="about-title">
+                <h2 id="about-title" className={styles.sectionTitle}>Về WildLens</h2>
+                <p className="muted">WildLens sử dụng mô hình YOLO qua FastAPI backend để nhận diện các loài động vật trong ảnh. Trải nghiệm được tối ưu cho di động và hỗ trợ truy cập bằng bàn phím.</p>
+            </section>
+        </div>
+    );
+}

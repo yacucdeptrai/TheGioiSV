@@ -1,0 +1,120 @@
+/* Global design system and base styles */
+/* 1) CSS Variables */
+:root {
+  --bg: #0b1014;
+  --panel: #111923;
+  --panel-2: #0d141d;
+  --text: #e6edf3;
+  --muted: #9fb0c3;
+  --primary: #0ea5e9;
+  --primary-700: #0784bf;
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --border: #1f2a37;
+  --shadow: 0 10px 20px rgba(0,0,0,.25);
+  --radius: 12px;
+  --radius-sm: 10px;
+  --radius-lg: 16px;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+}
+
+/* 2) Reset */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+html { color-scheme: dark; }
+body {
+  margin: 0;
+  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(1200px 1200px at 10% 0%, rgba(31,74,109,.35), transparent) no-repeat,
+              radial-gradient(1200px 1200px at 90% -20%, rgba(14,165,233,.25), transparent) no-repeat,
+              var(--bg);
+  color: var(--text);
+}
+
+img, canvas, svg, video { max-width: 100%; height: auto; }
+button { font: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* 3) Utilities */
+.container {
+  width: 100%;
+  max-width: 1100px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.muted { color: var(--muted); }
+.visually-hidden { position: absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+
+/* 4) Header */
+.site-header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); background: color-mix(in oklab, var(--panel), transparent 40%); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-4); }
+.brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 700; letter-spacing: .2px; }
+.brand-mark { font-size: 1.2rem; display: inline-block; }
+.brand-text { font-size: 1.05rem; }
+
+.primary-nav { display: none; }
+.primary-nav ul { list-style: none; display: flex; gap: var(--space-6); padding: 0; margin: 0; }
+.primary-nav a { color: var(--muted); transition: color .2s ease; }
+.primary-nav a:hover, .primary-nav a:focus-visible { color: var(--text); }
+
+.hamburger { appearance: none; border: 1px solid var(--border); background: var(--panel); color: var(--text); padding: .55rem .7rem; border-radius: var(--radius-sm); cursor: pointer; transition: background .2s ease, border-color .2s ease; }
+.hamburger:hover { background: var(--panel-2); border-color: color-mix(in oklab, var(--border), var(--text) 20%); }
+.hamburger-box { display: inline-flex; width: 22px; height: 16px; align-items: center; justify-content: center; position: relative; }
+.hamburger-inner, .hamburger-inner::before, .hamburger-inner::after { content: ""; position: absolute; height: 2px; width: 22px; background: var(--text); border-radius: 2px; transition: transform .25s ease, opacity .25s ease; }
+.hamburger-inner::before { transform: translateY(-6px); }
+.hamburger-inner::after { transform: translateY(6px); }
+
+.mobile-drawer { position: fixed; inset: 0 0 auto auto; top: 56px; right: var(--space-4); width: min(92%, 320px); background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transform: translateY(-10px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+.mobile-drawer.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+.mobile-drawer ul { list-style: none; padding: var(--space-4); margin: 0; display: grid; gap: .5rem; }
+.mobile-drawer a { display: block; padding: .6rem .8rem; border-radius: 10px; color: var(--text); background: var(--panel-2); border: 1px solid var(--border); }
+.mobile-drawer a:hover, .mobile-drawer a:focus-visible { outline: none; border-color: color-mix(in oklab, var(--border), var(--text) 25%); }
+
+@media (min-width: 840px) {
+  .primary-nav { display: block; }
+  .hamburger { display: none; }
+  .mobile-drawer { display: none; }
+}
+
+/* 5) Footer */
+.site-footer { margin-top: var(--space-12); border-top: 1px solid var(--border); background: color-mix(in oklab, var(--panel), transparent 30%); }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-6); }
+.site-footer ul { list-style: none; display: flex; gap: var(--space-4); padding: 0; margin: 0; }
+.site-footer a { color: var(--muted); }
+.site-footer a:hover, .site-footer a:focus-visible { color: var(--text); }
+
+/* 6) Buttons & Inputs */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border: 1px solid var(--border); background: var(--panel); color: var(--text); padding: .7rem 1rem; border-radius: var(--radius-sm); cursor: pointer; transition: transform .05s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.btn:hover { background: var(--panel-2); border-color: color-mix(in oklab, var(--border), var(--text) 20%); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: linear-gradient(180deg, color-mix(in oklab, var(--primary), white 14%), var(--primary-700)); border-color: color-mix(in oklab, var(--primary-700), black 10%); box-shadow: 0 6px 24px color-mix(in oklab, var(--primary), black 70%); }
+.btn.primary:hover { filter: brightness(1.02); }
+
+.field { display: grid; gap: .4rem; }
+.field label { font-size: .9rem; color: var(--muted); }
+
+.dropzone { border: 1px dashed color-mix(in oklab, var(--border), var(--text) 20%); background: color-mix(in oklab, var(--panel), transparent 10%); border-radius: var(--radius); padding: var(--space-6); text-align: center; transition: border-color .2s ease, background .2s ease; }
+.dropzone.dragover { border-color: var(--primary); background: color-mix(in oklab, var(--panel), var(--primary) 8%); }
+.dropzone p { margin: 0; color: var(--muted); }
+
+/* 7) Sections */
+main { padding-block: var(--space-8); }
+section { padding-block: var(--space-8); }
+section + section { border-top: 1px solid var(--border); }
+
+/* 8) Accessibility helpers */
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+
+/* 9) Reduced motion */
+@media (prefers-reduced-motion: reduce) { 
+  * { animation: none !important; transition: none !important; }
+}
