@@ -7,17 +7,22 @@ import styles from './page.module.css';
 
 // 1. Định nghĩa kiểu cho 1 đối tượng được phát hiện
 interface DetectionDetail {
-    vi_name: string;
-    habitat: string;
-    lifespan: string;
-    note: string;
+    vi_name?: string;
+    habitat?: string;
+    lifespan?: string;
+    note?: string;
+    // New/extended fields from Backend species.json
+    class?: string;
+    scientific_name?: string;
+    diet?: string;
+    conservation_status?: string;
 }
 
 interface DetectionResult {
     box: [number, number, number, number]; // [x1, y1, x2, y2]
     label: string;
     confidence: number;
-    details: DetectionDetail;
+    details?: DetectionDetail;
 }
 
 // 2. Định nghĩa kiểu cho API response
@@ -140,7 +145,8 @@ export default function Home() {
                     
                     // Vẽ nền cho text
                     ctx.fillStyle = '#00FF00';
-                    const text = `${label} (${(confidence * 100).toFixed(0)}%)`;
+                    const displayLabel = det.details?.vi_name ? `${det.details.vi_name} | ${label}` : label;
+                    const text = `${displayLabel} (${(confidence * 100).toFixed(0)}%)`;
                     ctx.font = '18px Arial';
                     const textMetrics = ctx.measureText(text);
                     const textWidth = textMetrics.width;
@@ -234,13 +240,32 @@ export default function Home() {
                         {detections.map((det: DetectionResult, index: number) => (
                             <article key={index} className={styles.infoCard} aria-labelledby={`det-${index}-title`}>
                                 <h3 id={`det-${index}-title`}>
-                                  {det.details.vi_name} <span className={styles.label}>({det.label})</span>
+                                  {det.details?.vi_name ?? det.label}
+                                  <span className={styles.label}> ({det.label})</span>
                                   <span className={styles.conf}> {(det.confidence * 100).toFixed(0)}%</span>
                                 </h3>
                                 <ul className={styles.detailsList}>
-                                    <li><strong>Nơi sống:</strong> {det.details.habitat}</li>
-                                    <li><strong>Tuổi thọ:</strong> {det.details.lifespan}</li>
-                                    <li><strong>Ghi chú:</strong> {det.details.note}</li>
+                                    {det.details?.scientific_name && (
+                                      <li><strong>Tên khoa học:</strong> <em>{det.details.scientific_name}</em></li>
+                                    )}
+                                    {det.details?.class && (
+                                      <li><strong>Ngành/Lớp:</strong> {det.details.class}</li>
+                                    )}
+                                    {det.details?.diet && (
+                                      <li><strong>Chế độ ăn:</strong> {det.details.diet}</li>
+                                    )}
+                                    {det.details?.habitat && (
+                                      <li><strong>Nơi sống:</strong> {det.details.habitat}</li>
+                                    )}
+                                    {det.details?.lifespan && (
+                                      <li><strong>Tuổi thọ:</strong> {det.details.lifespan}</li>
+                                    )}
+                                    {det.details?.conservation_status && (
+                                      <li><strong>Tình trạng bảo tồn:</strong> {det.details.conservation_status}</li>
+                                    )}
+                                    {det.details?.note && (
+                                      <li><strong>Ghi chú:</strong> {det.details.note}</li>
+                                    )}
                                 </ul>
                             </article>
                         ))}

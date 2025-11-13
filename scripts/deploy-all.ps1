@@ -139,17 +139,19 @@ function Start-Frontend {
     }
 }
 
+# PASTE THIS INTO deploy-all.ps1, REPLACING THE OLD FUNCTIONS
+
 function Stop-ByPidFile($pidFile, [string]$name){
     if (Test-Path $pidFile) {
-        $pid = (Get-Content $pidFile -ErrorAction SilentlyContinue) -as [int]
-        if ($pid -and (Is-ProcessRunning $pid)) {
+        $processId = (Get-Content $pidFile -ErrorAction SilentlyContinue) -as [int]
+        if ($processId -and (Is-ProcessRunning $processId)) {
             try {
-                Write-Host "Stopping $name (PID $pid)..."
-                Stop-Process -Id $pid -Force -ErrorAction Stop
+                Write-Host "Stopping $name (PID $processId)..."
+                Stop-Process -Id $processId -Force -ErrorAction Stop
                 Remove-Item $pidFile -ErrorAction SilentlyContinue
                 Write-Host "$name stopped."
             } catch {
-                Write-Warn "Could not stop $name (PID $pid): $_"
+                Write-Warn "Could not stop $name (PID $processId): $_"
             }
         } else {
             Write-Warn "$name pid file exists but process not running. Removing pid file."
@@ -163,9 +165,9 @@ function Stop-ByPidFile($pidFile, [string]$name){
 function Show-Status {
     Write-Host "=== Status ===" -ForegroundColor Cyan
     if (Test-Path $backendPidFile) {
-        $pid = (Get-Content $backendPidFile) -as [int]
-        if ($pid -and (Is-ProcessRunning $pid)) {
-            Write-Host "Backend: running (PID $pid)"
+        $processId = (Get-Content $backendPidFile) -as [int]
+        if ($processId -and (Is-ProcessRunning $processId)) {
+            Write-Host "Backend: running (PID $processId)"
         } else {
             Write-Host "Backend: pid file present but process not running."
         }
@@ -174,9 +176,9 @@ function Show-Status {
     }
 
     if (Test-Path $frontendPidFile) {
-        $pid = (Get-Content $frontendPidFile) -as [int]
-        if ($pid -and (Is-ProcessRunning $pid)) {
-            Write-Host "Frontend: running (PID $pid)"
+        $processId = (Get-Content $frontendPidFile) -as [int]
+        if ($processId -and (Is-ProcessRunning $processId)) {
+            Write-Host "Frontend: running (PID $processId)"
         } else {
             Write-Host "Frontend: pid file present but process not running."
         }

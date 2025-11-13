@@ -4,209 +4,329 @@
     "vi_name": "Chó",
     "habitat": "Nhà ở, khu dân cư",
     "lifespan": "10 - 13 năm",
-    "note": "Trung thành, thính giác nhạy bén."
+    "note": "Rất trung thành và có thính giác cực kỳ nhạy bén. Chúng thường được coi là 'bạn thân nhất của con người' và đã được thuần hóa từ hàng ngàn năm trước. Có hàng trăm giống chó khác nhau, được lai tạo cho nhiều mục đích từ chăn gia súc, săn bắn đến làm bạn đồng hành.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Canis lupus familiaris",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Cat": {
     "name": "Cat",
     "vi_name": "Mèo",
     "habitat": "Nhà ở, khu dân cư",
     "lifespan": "12 - 18 năm",
-    "note": "Leo trèo giỏi, ngủ nhiều, săn chuột."
+    "note": "Leo trèo giỏi, ngủ nhiều và là loài săn chuột hiệu quả. Mèo nhà thường ngủ từ 12-16 tiếng mỗi ngày để bảo tồn năng lượng cho việc săn mồi. Chúng có thị lực ban đêm tuyệt vời và khả năng giữ thăng bằng ấn tượng nhờ chiếc đuôi dài. Mèo giao tiếp bằng nhiều âm thanh khác nhau, bao gồm tiếng kêu meo meo, gừ gừ và rít.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Felis catus",
+    "diet": "Carnivore (Ăn thịt)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Horse": {
     "name": "Horse",
     "vi_name": "Ngựa",
     "habitat": "Đồng cỏ, trang trại",
     "lifespan": "25 - 30 năm",
-    "note": "Chạy nhanh, ngủ đứng."
+    "note": "Nổi tiếng với tốc độ chạy nhanh và tập tính ngủ đứng. Ngựa có thể ngủ đứng nhờ một hệ thống dây chằng và gân đặc biệt giúp 'khóa' các khớp chân, cho phép chúng nghỉ ngơi mà vẫn cảnh giác. Chúng là động vật xã hội, sống theo đàn và có một hệ thống phân cấp rõ rệt.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Equus ferus caballus",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Cow": {
     "name": "Cow",
     "vi_name": "Bò",
     "habitat": "Đồng cỏ, trang trại",
     "lifespan": "15 - 20 năm",
-    "note": "Loài nhai lại, sống theo đàn."
+    "note": "Là loài nhai lại, sống theo đàn và có dạ dày bốn ngăn phức tạp. Cấu trúc dạ dày này cho phép chúng tiêu hóa các loại thực vật cứng như cỏ. Bò dành phần lớn thời gian trong ngày để ăn và 'ợ' thức ăn lên để nhai lại. Chúng là động vật xã hội và hình thành các mối liên kết chặt chẽ trong đàn.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Bos taurus",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Sheep": {
     "name": "Sheep",
     "vi_name": "Cừu",
     "habitat": "Đồng cỏ, đồi núi",
     "lifespan": "10 - 12 năm",
-    "note": "Lông dày (len), tính bầy đàn cao."
+    "note": "Nổi bật với bộ lông dày (len) và tính bầy đàn rất cao. Cừu được nuôi chủ yếu để lấy len, thịt và sữa. Chúng có tầm nhìn ngoại vi rất tốt, khoảng 300 độ, giúp phát hiện kẻ săn mồi hiệu quả. Cừu có xu hướng đi theo con đầu đàn và dễ bị hoảng sợ khi tách khỏi bầy.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Ovis aries",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Pig": {
     "name": "Pig",
     "vi_name": "Lợn",
     "habitat": "Chuồng trại, rừng (lợn rừng)",
     "lifespan": "15 - 20 năm",
-    "note": "Thông minh, ăn tạp, khứu giác tốt."
+    "note": "Rất thông minh, ăn tạp và có khứu giác cực kỳ tốt. Lợn được coi là một trong những loài động vật thông minh nhất, thậm chí còn hơn cả chó. Khứu giác nhạy bén của chúng thường được sử dụng để tìm kiếm nấm cục quý hiếm. Chúng thích tắm bùn để làm mát cơ thể và bảo vệ da khỏi côn trùng, ánh nắng mặt trời.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Sus scrofa domesticus",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Chicken": {
     "name": "Chicken",
     "vi_name": "Gà",
     "habitat": "Trang trại, vườn",
     "lifespan": "5 - 10 năm",
-    "note": "Báo thức (gà trống), đẻ trứng hàng ngày."
+    "note": "Gà trống nổi tiếng với tiếng gáy báo thức lúc bình minh, gà mái có thể đẻ trứng gần như hàng ngày. Gà có một trật tự xã hội nghiêm ngặt gọi là 'trật tự mổ' (pecking order) để xác định thứ bậc trong đàn. Chúng là loài ăn tạp, ăn từ hạt, ngũ cốc đến côn trùng và các động vật nhỏ.",
+    "class": "Aves (Chim)",
+    "scientific_name": "Gallus gallus domesticus",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Duck": {
     "name": "Duck",
     "vi_name": "Vịt",
     "habitat": "Ao hồ, đầm lầy",
     "lifespan": "5 - 10 năm",
-    "note": "Lông không thấm nước, chân có màng bơi."
+    "note": "Có bộ lông không thấm nước và đôi chân có màng để bơi lội hiệu quả. Lớp lông không thấm nước là nhờ một tuyến dầu ở gần đuôi, vịt dùng mỏ để phết dầu này lên toàn bộ lông. Chúng là loài chim nước phổ biến, có thể tìm thấy ở cả môi trường nước ngọt và nước mặn.",
+    "class": "Aves (Chim)",
+    "scientific_name": "Anas platyrhynchos domesticus",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Bird": {
     "name": "Bird",
     "vi_name": "Chim",
     "habitat": "Đa dạng (rừng, trời, phố)",
     "lifespan": "Đa dạng",
-    "note": "Có lông vũ, mỏ sừng, hầu hết biết bay."
+    "note": "Đặc trưng bởi bộ lông vũ, mỏ sừng và hầu hết các loài đều biết bay. Chim là loài động vật máu nóng, có xương rỗng giúp giảm trọng lượng cơ thể khi bay. Chúng giao tiếp bằng tiếng hót, tiếng kêu và cả các điệu bộ cơ thể. Một số loài chim, như đà điểu và chim cánh cụt, đã tiến hóa để không bay được.",
+    "class": "Aves (Chim)",
+    "scientific_name": "N/A (Lớp Aves)",
+    "diet": "Varies (Đa dạng)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Elephant": {
     "name": "Elephant",
     "vi_name": "Voi",
     "habitat": "Rừng nhiệt đới, xavan",
     "lifespan": "60 - 70 năm",
-    "note": "Động vật trên cạn lớn nhất, có vòi, trí nhớ tốt."
+    "note": "Là động vật trên cạn lớn nhất, nổi bật với chiếc vòi dài và trí nhớ tốt. Vòi voi là một cơ quan cực kỳ linh hoạt, được sử dụng để thở, ngửi, uống nước, phát ra âm thanh và cầm nắm mọi thứ. Chúng sống trong các cấu trúc xã hội mẫu hệ phức tạp và thể hiện sự đồng cảm rõ rệt. Voi giao tiếp bằng âm thanh hạ âm, mà tai người không thể nghe thấy.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Loxodonta (Châu Phi) / Elephas (Châu Á)",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Endangered (Nguy cấp)"
   },
   "Lion": {
     "name": "Lion",
     "vi_name": "Sư tử",
     "habitat": "Xavan, đồng cỏ",
     "lifespan": "10 - 14 năm",
-    "note": "Sống theo bầy đàn, con đực có bờm."
+    "note": "Là loài mèo lớn duy nhất sống theo bầy đàn, con đực có bờm rõ rệt. Một bầy đàn (gọi là 'pride') thường bao gồm nhiều con cái, con non và một vài con đực trưởng thành. Sư tử cái đảm nhận hầu hết việc săn mồi, trong khi con đực có nhiệm vụ bảo vệ lãnh thổ. Tiếng gầm của sư tử có thể nghe thấy từ khoảng cách 8 km.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Panthera leo",
+    "diet": "Carnivore (Ăn thịt)",
+    "conservation_status": "Vulnerable (Dễ bị tổn thương)"
   },
   "Tiger": {
     "name": "Tiger",
     "vi_name": "Hổ",
     "habitat": "Rừng rậm, rừng ngập mặn",
     "lifespan": "10 - 15 năm",
-    "note": "Sống đơn độc, bộ lông vằn ngụy trang."
+    "note": "Thường sống đơn độc và săn mồi một mình, bộ lông vằn giúp ngụy trang hoàn hảo. Mỗi con hổ có một bộ lông vằn độc nhất, giống như dấu vân tay của con người. Chúng là loài mèo lớn nhất thế giới và là những vận động viên bơi lội cừ khôi, không giống như hầu hết các loài mèo khác.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Panthera tigris",
+    "diet": "Carnivore (Ăn thịt)",
+    "conservation_status": "Endangered (Nguy cấp)"
   },
   "Bear": {
     "name": "Bear",
     "vi_name": "Gấu",
     "habitat": "Rừng, núi, vùng băng tuyết",
     "lifespan": "20 - 25 năm",
-    "note": "Ngủ đông (một số loài), khứu giác cực tốt."
+    "note": "Một số loài có tập tính ngủ đông, và tất cả các loài gấu đều có khứu giác cực tốt. Khứu giác của gấu nhạy bén đến mức chúng có thể ngửi thấy mùi thức ăn từ cách xa hàng km. Trong thời gian ngủ đông, nhịp tim và trao đổi chất của chúng giảm đáng kể để tiết kiệm năng lượng. Gấu Bắc Cực là loài ăn thịt lớn nhất trên cạn và phụ thuộc vào băng biển để săn hải cẩu.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Ursidae (Họ Gấu)",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Monkey": {
     "name": "Monkey",
     "vi_name": "Khỉ",
     "habitat": "Rừng nhiệt đới, núi",
     "lifespan": "15 - 30 năm",
-    "note": "Leo trèo giỏi, tay linh hoạt, sống bầy đàn."
+    "note": "Leo trèo giỏi, có bàn tay linh hoạt và sống theo bầy đàn xã hội. Hầu hết các loài khỉ đều có đuôi (trừ vượn), giúp chúng giữ thăng bằng khi di chuyển trên cây. Chúng là loài động vật xã hội cao, sống trong các nhóm gọi là 'troops' (bầy). Khỉ sử dụng nhiều biểu cảm khuôn mặt và âm thanh để giao tiếp với nhau.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Varies (Nhiều loài)",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Deer": {
     "name": "Deer",
     "vi_name": "Hươu",
     "habitat": "Rừng, bìa rừng",
     "lifespan": "10 - 20 năm",
-    "note": "Con đực thường có sừng rụng hàng năm."
+    "note": "Con đực thường có sừng (antlers) và rụng sừng hàng năm. Những chiếc sừng này khác với sừng (horns) ở chỗ chúng được rụng và mọc lại mỗi năm, chủ yếu dùng để thu hút bạn tình và chiến đấu. Hươu là động vật nhai lại, có thị lực ban đêm tốt và khả năng nhảy rất xa để trốn thoát kẻ thù.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Cervidae (Họ Hươu nai)",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Fox": {
     "name": "Fox",
     "vi_name": "Cáo",
     "habitat": "Rừng, khu dân cư, đồi cát",
-    "lifespan": "2 - 5 năm",
-    "note": "Nhanh nhẹn, ranh mãnh, tai lớn."
+    "lifespan": "2 - 5 năm (trong tự nhiên)",
+    "note": "Nhanh nhẹn, ranh mãnh và có đôi tai lớn giúp tản nhiệt và nghe ngóng con mồi. Cáo là loài động vật rất dễ thích nghi, có thể sống ở cả nông thôn và các khu vực đô thị. Một số loài cáo, như cáo Bắc Cực, sử dụng từ trường của Trái Đất để săn mồi, đặc biệt là khi 'lặn' xuống tuyết để bắt con mồi bên dưới.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Vulpini (Tông Cáo)",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Wolf": {
     "name": "Wolf",
     "vi_name": "Sói",
     "habitat": "Rừng, vùng núi, tuyết",
-    "lifespan": "6 - 8 năm",
-    "note": "Săn mồi theo bầy, tiếng hú đặc trưng."
+    "lifespan": "6 - 8 năm (trong tự nhiên)",
+    "note": "Săn mồi theo bầy đàn có tổ chức và có tiếng hú đặc trưng để giao tiếp. Sói sống và săn mồi theo các bầy có tổ chức xã hội chặt chẽ, thường do một cặp sói đầu đàn (alpha) lãnh đạo. Tiếng hú của chúng được sử dụng để giao tiếp trong khoảng cách xa, đánh dấu lãnh thổ và củng cố sự gắn kết của bầy. Sói có sức bền đáng kinh ngạc, có thể di chuyển liên tục trong nhiều giờ.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Canis lupus",
+    "diet": "Carnivore (Ăn thịt)",
+    "conservation_status": "Least Concern (Ít quan tâm)"
   },
   "Rabbit": {
     "name": "Rabbit",
     "vi_name": "Thỏ",
     "habitat": "Hang dưới đất, đồng cỏ",
     "lifespan": "8 - 12 năm",
-    "note": "Tai dài, di chuyển bằng cách nhảy."
+    "note": "Có đôi tai dài, di chuyển bằng cách nhảy và sinh sản rất nhanh. Đôi tai dài của thỏ không chỉ để nghe ngóng kẻ thù từ xa mà còn giúp điều hòa thân nhiệt. Chúng có tầm nhìn gần 360 độ, chỉ có một điểm mù nhỏ ngay trước mũi. Răng của thỏ không ngừng phát triển, vì vậy chúng cần gặm cỏ khô liên tục để mài mòn răng.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Oryctolagus cuniculus domesticus",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Domesticated (Đã thuần hóa)"
   },
   "Squirrel": {
     "name": "Squirrel",
     "vi_name": "Sóc",
     "habitat": "Cây cối, công viên",
     "lifespan": "5 - 10 năm",
-    "note": "Đuôi xù giữ thăng bằng, thích tích trữ hạt."
+    "note": "Có chiếc đuôi xù lớn giúp giữ thăng bằng và nổi tiếng với việc tích trữ hạt. Chiếc đuôi này cũng được dùng như một chiếc chăn giữ ấm khi ngủ hoặc một chiếc dù khi nhảy. Sóc rất thông minh và thường 'giả vờ' chôn hạt ở một nơi để đánh lừa những kẻ trộm tiềm năng đang theo dõi. Chúng có thể nhớ vị trí của hàng ngàn nơi cất giấu thức ăn.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Sciuridae (Họ Sóc)",
+    "diet": "Omnivore (Ăn tạp, chủ yếu là hạt)",
+    "conservation_status": "Least Concern (Ít quan tâm)"
   },
   "Giraffe": {
     "name": "Giraffe",
     "vi_name": "Hươu cao cổ",
     "habitat": "Xavan, đồng cỏ thưa",
     "lifespan": "~25 năm",
-    "note": "Cổ siêu dài, lưỡi dài màu xanh tím."
+    "note": "Nổi bật với chiếc cổ siêu dài và chiếc lưỡi dài màu xanh tím. Cổ dài của hươu cao cổ có cùng số lượng đốt sống cổ như con người (bảy đốt), nhưng mỗi đốt rất dài. Lưỡi dài (45-50 cm) được dùng để nắm lá cây, và màu sẫm của lưỡi được cho là để chống cháy nắng. Chúng có huyết áp cao nhất trong các loài động vật có vú để bơm máu lên não.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Giraffa camelopardalis",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Vulnerable (Dễ bị tổn thương)"
   },
   "Zebra": {
     "name": "Zebra",
     "vi_name": "Ngựa vằn",
     "habitat": "Xavan, đồng cỏ",
     "lifespan": "~25 năm",
-    "note": "Bộ lông sọc đen trắng độc nhất."
+    "note": "Nổi tiếng với bộ lông sọc đen trắng độc nhất. Không có hai con ngựa vằn nào có bộ lông giống hệt nhau, tương tự như dấu vân tay. Các nhà khoa học tin rằng các sọc vằn có thể giúp ngựa vằn làm rối mắt kẻ săn mồi, xua đuổi ruồi xsetse mang bệnh, hoặc điều hòa thân nhiệt. Chúng là động vật xã hội, sống thành bầy đàn lớn.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Equus zebra",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Near Threatened (Gần bị đe dọa)"
   },
   "Kangaroo": {
     "name": "Kangaroo",
     "vi_name": "Chuột túi",
     "habitat": "Đồng cỏ Úc (Bushland)",
     "lifespan": "6 - 20 năm",
-    "note": "Di chuyển bằng hai chân sau, nuôi con trong túi."
+    "note": "Di chuyển bằng cách nhảy bằng hai chân sau và nuôi con trong túi. Kangaroo là loài thú có túi (marsupial) lớn nhất. Chúng sử dụng chiếc đuôi khỏe mạnh của mình như một 'chân thứ năm' để giữ thăng bằng và tạo lực đẩy khi nhảy. Con non (gọi là 'joey') được sinh ra khi còn rất nhỏ và sẽ phát triển hoàn thiện trong túi của mẹ.",
+    "class": "Mammalia (Động vật có vú - Marsupial)",
+    "scientific_name": "Macropus (Chi)",
+    "diet": "Herbivore (Ăn cỏ)",
+    "conservation_status": "Least Concern (Ít quan tâm)"
   },
   "Panda": {
     "name": "Panda",
     "vi_name": "Gấu trúc",
     "habitat": "Rừng tre trúc (Trung Quốc)",
     "lifespan": "~20 năm",
-    "note": "Chỉ ăn tre trúc, lông đen trắng đặc trưng."
+    "note": "Gần như chỉ ăn tre trúc và có bộ lông đen trắng đặc trưng. Gấu trúc có một 'ngón tay cái giả', thực chất là một xương cổ tay mở rộng, để giúp chúng cầm nắm thân tre khi ăn. Mặc dù thuộc bộ Ăn thịt, chế độ ăn của chúng 99% là thực vật. Bộ lông đen trắng có thể giúp chúng ngụy trang trong môi trường bóng râm của rừng tre.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Ailuropoda melanoleuca",
+    "diet": "Herbivore (Ăn cỏ - chủ yếu là tre)",
+    "conservation_status": "Vulnerable (Dễ bị tổn thương)"
   },
   "Koala": {
     "name": "Koala",
     "vi_name": "Gấu túi",
     "habitat": "Rừng bạch đàn Úc",
     "lifespan": "13 - 18 năm",
-    "note": "Ngủ tới 18-22h/ngày, chỉ ăn lá bạch đàn."
+    "note": "Ngủ tới 18-22 giờ mỗi ngày và có chế độ ăn gần như chỉ bao gồm lá bạch đàn. Chế độ ăn lá bạch đàn rất ít dinh dưỡng và khó tiêu hóa, đó là lý do chúng ngủ nhiều để bảo tồn năng lượng. Koala là loài thú có túi, con non sống trong túi của mẹ trong khoảng sáu tháng đầu đời. Chúng có hai ngón tay cái đối diện trên mỗi bàn tay, giúp cầm nắm cành cây chắc chắn.",
+    "class": "Mammalia (Động vật có vú - Marsupial)",
+    "scientific_name": "Phascolarctos cinereus",
+    "diet": "Herbivore (Ăn lá bạch đàn)",
+    "conservation_status": "Endangered (Nguy cấp - ở QLD, NSW, ACT)"
   },
   "Raccoon": {
     "name": "Raccoon",
     "vi_name": "Gấu mèo",
     "habitat": "Rừng, thành phố",
-    "lifespan": "2 - 3 năm",
-    "note": "\"Đeo mặt nạ\" đen, ngón tay khéo léo."
+    "lifespan": "2 - 3 năm (trong tự nhiên)",
+    "note": "Có 'mặt nạ' đen đặc trưng và ngón tay cực kỳ khéo léo. Gấu mèo có xúc giác rất nhạy bén ở bàn tay, và chúng thường 'rửa' thức ăn (hoặc nhúng thức ăn vào nước) để cảm nhận rõ hơn về vật thể. 'Mặt nạ' đen có thể giúp giảm độ chói và tăng cường thị lực ban đêm. Chúng là loài rất thông minh và có khả năng giải quyết vấn đề tốt.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Procyon lotor",
+    "diet": "Omnivore (Ăn tạp)",
+    "conservation_status": "Least Concern (Ít quan tâm)"
   },
   "Penguin": {
     "name": "Penguin",
     "vi_name": "Chim cánh cụt",
     "habitat": "Nam Cực, bờ biển lạnh",
     "lifespan": "15 - 20 năm",
-    "note": "Chim không bay được nhưng bơi lặn cực giỏi."
+    "note": "Là loài chim không bay được nhưng bơi lặn cực kỳ giỏi. Đôi cánh của chim cánh cụt đã tiến hóa thành chân chèo, giúp chúng 'bay' dưới nước với tốc độ cao để săn cá. Chúng sống thành các bầy lớn, đặc biệt là trong mùa sinh sản để bảo vệ nhau khỏi giá lạnh. Lớp mỡ dày và bộ lông rậm rạp không thấm nước giúp chúng giữ ấm trong khí hậu khắc nghiệt.",
+    "class": "Aves (Chim)",
+    "scientific_name": "Spheniscidae (Họ)",
+    "diet": "Carnivore (Ăn thịt - cá, nhuyễn thể)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Dolphin": {
     "name": "Dolphin",
     "vi_name": "Cá heo",
     "habitat": "Đại dương, biển",
     "lifespan": "40 - 60 năm",
-    "note": "Rất thông minh, định vị bằng sóng âm."
+    "note": "Rất thông minh và sử dụng khả năng định vị bằng sóng âm (tiếng vang). Khả năng này giúp chúng 'nhìn thấy' môi trường xung quanh và săn mồi bằng cách phát ra âm thanh và lắng nghe tiếng vọng lại. Chúng là loài động vật xã hội phức tạp, sống trong các nhóm (pods) và có khả năng hợp tác săn mồi. Nhiều nhà khoa học tin rằng cá heo có khả năng tự nhận thức.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Delphinidae (Họ)",
+    "diet": "Carnivore (Ăn thịt - cá, mực)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Whale": {
     "name": "Whale",
     "vi_name": "Cá voi",
     "habitat": "Đại dương",
-    "lifespan": "30 - 90 năm",
-    "note": "Kích thước khổng lồ, giao tiếp bằng \"bài hát\"."
+    "lifespan": "30 - 90+ năm",
+    "note": "Nổi tiếng với kích thước khổng lồ và khả năng giao tiếp bằng 'bài hát' phức tạp. Cá voi xanh là động vật lớn nhất từng tồn tại trên Trái Đất, lớn hơn cả khủng long. Các 'bài hát' của cá voi lưng gù được cho là dùng để giao tiếp và thu hút bạn tình. Mặc dù sống dưới nước, cá voi là động vật có vú và phải ngoi lên mặt nước để hít thở không khí.",
+    "class": "Mammalia (Động vật có vú)",
+    "scientific_name": "Cetacea (Bộ)",
+    "diet": "Carnivore (Ăn thịt - nhuyễn thể, cá)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Turtle": {
     "name": "Turtle",
     "vi_name": "Rùa",
     "habitat": "Cả trên cạn và dưới nước",
     "lifespan": "30 - 80+ năm",
-    "note": "Có mai cứng bảo vệ, di chuyển chậm chạp."
+    "note": "Đặc trưng bởi chiếc mai cứng để bảo vệ và di chuyển chậm chạp trên cạn. Mai rùa thực chất là một phần của bộ xương, bao gồm xương sườn và xương sống hợp nhất lại. Một số loài rùa (như rùa biển) di cư hàng ngàn km để đến bãi đẻ trứng truyền thống. Rùa là một trong những loài động vật sống lâu nhất trên thế giới.",
+    "class": "Reptilia (Bò sát)",
+    "scientific_name": "Testudines (Bộ)",
+    "diet": "Varies (Omnivore/Herbivore)",
+    "conservation_status": "Varies (Đa dạng)"
   },
   "Frog": {
     "name": "Frog",
     "vi_name": "Ếch",
     "habitat": "Đầm lầy, ao hồ, nơi ẩm ướt",
     "lifespan": "5 - 10 năm",
-    "note": "Lưỡng cư, da ẩm ướt."
+    "note": "Là loài lưỡng cư, có làn da ẩm ướt và trải qua quá trình biến thái. Ếch có thể 'uống' nước và 'thở' một phần qua da, đó là lý do tại sao da chúng luôn cần ẩm. Chúng bắt đầu cuộc đời là nòng nọc (sống dưới nước, thở bằng mang) trước khi biến đổi thành ếch trưởng thành (sống trên cạn, thở bằng phổi). Nhiều loài ếch có màu sắc sặc sỡ để cảnh báo kẻ thù rằng chúng có độc.",
+    "class": "Amphibia (Lưỡng cư)",
+    "scientific_name": "Anura (Bộ)",
+    "diet": "Carnivore (Ăn thịt - côn trùng)",
+    "conservation_status": "Varies (Đa dạng, nhiều loài bị đe dọa)"
   }
 }
