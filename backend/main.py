@@ -8,6 +8,7 @@ import io
 from fastapi import UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+import os
 
 # ==============================================================================
 # BƯỚC 3: LOGIC AI CHO YOLOv8 (PHẦN LÕI)
@@ -239,3 +240,9 @@ def read_root():
     return {"Hello": "Đây là Animal Detector API"}
 
 # --- Lệnh chạy (gõ vào terminal): uvicorn main:app --reload --host 0.0.0.0 --port 8000 ---
+# === THÊM VÀO CUỐI FILE main.py ===
+if __name__ == "__main__":
+    # Lấy port từ biến môi trường của Render, nếu không có thì dùng 8000
+    port = int(os.environ.get("PORT", 8000))
+    # Thêm 'import os' lên đầu file nhé
+    uvicorn.run(app, host="0.0.0.0", port=port)
