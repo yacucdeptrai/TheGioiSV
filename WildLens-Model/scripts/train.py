@@ -127,9 +127,9 @@ def main():
     parser = argparse.ArgumentParser(description='WildLens: Train YOLOv11 on custom 30-species dataset and export ONNX + labels')
     parser.add_argument('--data', type=str, default=str(Path(__file__).resolve().parent.parent / 'data' / 'data.yaml'),
                         help='Path to dataset data.yaml (centralized at WildLens-Model/data/data.yaml by default)')
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--imgsz', type=int, default=320)
-    parser.add_argument('--batch', type=int, default=16)
+    parser.add_argument('--batch', type=int, default=32)
     parser.add_argument('--device', type=str, default=None, help='Device id or type: 0, 0,1, cpu, mps, cuda')
     parser.add_argument('--export_dir', type=str, default=str(Path(__file__).resolve().parent / 'exported_models'))
     # Advanced knobs
@@ -232,8 +232,8 @@ def main():
     except Exception as e:
         print(f'WARN: Label sanity check failed: {e}')
 
-    # Load base YOLO11s model (Ultralytics naming uses 'yolo11*')
-    model = YOLO('yolo11s.pt')
+    # Load base YOLO11n model (Ultralytics naming uses 'yolo11*')
+    model = YOLO('yolo11n.pt')
 
     # Compose training kwargs using Ultralytics API flags
     train_kwargs = dict(
