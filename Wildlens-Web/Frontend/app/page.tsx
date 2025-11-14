@@ -38,8 +38,12 @@ export default function Home() {
     const [error, setError] = useState<string | null>(null);
     const [imgSrc, setImgSrc] = useState<string | null>(null); // Để lưu ảnh gốc
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
+    const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
 
     // Hàm xử lý khi người dùng chọn file
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +118,86 @@ export default function Home() {
         }
     };
 
+    // CAMERA: mở camera và xin quyền
+    const openCamera = async () => {
+        setCameraError(null);
+        setError(null);
+        try {
+            if (!('mediaDevices' in navigator) || !navigator.mediaDevices?.getUserMedia) {
+                throw new Error('Trình duyệt không hỗ trợ camera (getUserMedia).');
+            }
+            // Ưu tiên camera sau (environment) nếu có
+            const constraints: MediaStreamConstraints = {
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false,
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            mediaStreamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                await videoRef.current.play();
+            }
+            setIsCameraOpen(true);
+        } catch (e) {
+            console.error(e);
+            setCameraError('Không thể truy cập camera. Vui lòng cấp quyền hoặc kiểm tra thiết bị.');
+        }
+    };
+
+    const closeCamera = () => {
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+            mediaStreamRef.current = null;
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+        setIsCameraOpen(false);
+    };
+
+    // Chụp ảnh từ video và gửi nhận diện
+    const captureFromCamera = async () => {
+        if (!videoRef.current) return;
+        const video = videoRef.current;
+
+        // Tạo canvas tạm để chụp frame
+        const temp = document.createElement('canvas');
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        temp.width = w;
+        temp.height = h;
+        const tctx = temp.getContext('2d');
+        if (!tctx) return;
+        tctx.drawImage(video, 0, 0, w, h);
+
+        // Hiển thị trước lên UI
+        const dataUrl = temp.toDataURL('image/jpeg', 0.95);
+        setImgSrc(dataUrl);
+        setDetections([]);
+
+        // Chuyển thành blob/file để tận dụng pipeline có sẵn
+        const blob = await new Promise<Blob | null>((resolve) => temp.toBlob((b) => resolve(b), 'image/jpeg', 0.95));
+        if (blob) {
+            const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            setSelectedFile(file);
+            await handleDetection(file);
+        } else {
+            setError('Không thể chụp ảnh từ camera.');
+        }
+        // Đóng camera sau khi chụp để tiết kiệm pin
+        closeCamera();
+    };
+
+    // Đảm bảo dọn tài nguyên camera khi rời trang/unmount
+    useEffect(() => {
+        return () => {
+            if (mediaStreamRef.current) {
+                mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+                mediaStreamRef.current = null;
+            }
+        };
+    }, []);
+
     // Hàm vẽ kết quả lên canvas
     useEffect(() => {
         // Đảm bảo canvas đã sẵn sàng
@@ -132,7 +216,13 @@ export default function Home() {
                 canvas.height = img.height;
                 
                 // 1. Vẽ ảnh gốc lên
-                ctx.drawImage(img, 0, 0);
+                try {
+                    ctx.drawImage(img, 0, 0);
+                } catch (e) {
+                    console.error('Không thể vẽ ảnh. Trình duyệt có thể không hỗ trợ định dạng này.', e);
+                    setError('Trình duyệt không hỗ trợ định dạng ảnh này. Hãy thử JPG/PNG/WebP/AVIF.');
+                    return;
+                }
 
                 // 2. Vẽ các hộp Bounding Box
                 detections.forEach((det: DetectionResult) => {
@@ -165,6 +255,9 @@ export default function Home() {
                     );
                 });
             };
+            img.onerror = () => {
+                setError('Không thể tải ảnh. Định dạng có thể không được hỗ trợ trên trình duyệt này.');
+            };
             img.src = imgSrc;
         } else {
             // Xóa canvas nếu không có ảnh
@@ -196,21 +289,40 @@ export default function Home() {
                 >
                   <div className={styles.dropInner}>
                     <p><strong>Kéo & thả ảnh</strong> vào đây hoặc</p>
-                    <label htmlFor="file-input" className="btn primary" aria-label="Chọn ảnh từ máy">Chọn ảnh</label>
+                    <div className={styles.actionsRow}>
+                      <label htmlFor="file-input" className="btn primary" aria-label="Chọn ảnh từ máy">Chọn ảnh</label>
+                      <button type="button" className="btn" onClick={openCamera} aria-label="Mở camera để chụp ảnh">Dùng camera</button>
+                    </div>
                     <input
                       id="file-input"
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.bmp,.gif,.tif,.tiff"
+                      // gợi ý dùng camera sau trên di động hỗ trợ
+                      capture="environment"
                       onChange={handleFileChange}
                       className="visually-hidden"
                     />
-                    <p className="muted" aria-live="polite">Hỗ trợ JPG, PNG. Kích thước tối đa phụ thuộc trình duyệt.</p>
+                    <p className="muted" aria-live="polite">Hỗ trợ JPG, PNG, WebP, AVIF, BMP, GIF, TIFF (tùy hỗ trợ trình duyệt).</p>
                   </div>
                 </div>
 
                 {isLoading && <div className={styles.banner} role="status">Đang xử lý... Vui lòng chờ.</div>}
-                {error && <div className={`${styles.banner} ${styles.error}`} role="alert">{error}</div>}
+                {(error || cameraError) && <div className={`${styles.banner} ${styles.error}`} role="alert">{error || cameraError}</div>}
             </section>
+
+            {isCameraOpen && (
+              <section id="camera" className={styles.section} aria-labelledby="camera-title">
+                <h2 id="camera-title" className={styles.sectionTitle}>Camera</h2>
+                <div className={styles.cameraBox}>
+                  <video ref={videoRef} className={styles.video} playsInline muted />
+                  <div className={styles.cameraControls}>
+                    <button className="btn primary" onClick={captureFromCamera} aria-label="Chụp ảnh">Chụp ảnh</button>
+                    <button className="btn" onClick={closeCamera} aria-label="Đóng camera">Đóng</button>
+                  </div>
+                  <p className="muted">Nếu không thấy camera, hãy cấp quyền truy cập camera cho trình duyệt.</p>
+                </div>
+              </section>
+            )}
 
             <section id="results" className={styles.section} aria-labelledby="results-title">
                 <h2 id="results-title" className={styles.sectionTitle}>Kết quả</h2>

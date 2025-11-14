@@ -7,6 +7,8 @@
 .dropzone { margin-top: .5rem; }
 .dropInner { display: grid; justify-items: center; gap: .75rem; }
 
+.actionsRow { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; }
+
 .banner { margin-top: .75rem; padding: .75rem 1rem; border: 1px solid var(--border); background: color-mix(in oklab, var(--panel), var(--accent) 6%); border-radius: var(--radius-sm); }
 .banner.error { background: color-mix(in oklab, var(--panel), var(--danger) 8%); border-color: color-mix(in oklab, var(--danger), black 40%); }
 
@@ -35,3 +37,14 @@
 .detailsList { margin: 0; padding-left: 1.1rem; }
 .label { color: var(--muted); font-weight: 600; }
 .conf { margin-left: .5rem; color: var(--accent); font-weight: 700; }
+
+/* Camera UI */
+.cameraBox { display: grid; gap: .75rem; justify-items: center; }
+.video {
+  width: min(100%, 640px);
+  aspect-ratio: 3 / 4;
+  background: black;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.cameraControls { display: flex; gap: .5rem; }
