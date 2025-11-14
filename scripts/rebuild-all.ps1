@@ -6,6 +6,7 @@
 
 USAGE:
   .\rebuild-all.ps1
+  .\rebuild-all.ps1 -SkipBackend (rebuild Frontend only)
 #>
 
 # =============================================================================
@@ -15,7 +16,8 @@ USAGE:
 param(
     [string]$BackendRelPath = "..\Wildlens-Web\Backend",
     [string]$FrontendRelPath = "..\Wildlens-Web\Frontend",
-    [string]$VenvName = "venv"
+    [string]$VenvName = ".venv",
+    [switch]$SkipBackend = $false ## bypass Backend
 )
 
 Set-StrictMode -Version Latest
@@ -186,7 +188,15 @@ function Rebuild-Frontend {
 
 try {
     Stop-Services
-    Rebuild-Backend
+
+    ## check if not bypass SkipBackend
+    if (-not $SkipBackend) {
+        Rebuild-Backend
+    }
+    else {
+        Write-Warn "=== SKIPPING Backend Rebuild (-SkipBackend) ==="
+    }
+
     Rebuild-Frontend
 
     Write-Host ""
