@@ -5,7 +5,7 @@
 Unified repository for the WildLens web experience:
 - Frontend: Next.js app (React 19) under `Wildlens-Web/Frontend`
 - Backend: FastAPI service under `Wildlens-Web/Backend`
-- Model: YOLOv8 training/export utilities under `WildLens-Model`
+- Model: YOLOv11 training/export utilities under `WildLens-Model`
 
 This README explains how to set up, run, and open the website on Windows using the provided helper script or manual commands. It also shows how to bootstrap a fresh Next.js app via `npx create-next-app@latest` if you want to recreate the frontend.
 

@@ -1,6 +1,6 @@
-# WildLens-Model — Training, Export, and Validation (YOLOv8)
+# WildLens-Model — Training, Export, and Validation (YOLOv11)
 
-This subproject contains everything needed to train a YOLOv8 model for 30 animal species and export it to ONNX for use by the WildLens web backend.
+This subproject contains everything needed to train a YOLOv11 model for 30 animal species and export it to ONNX for use by the WildLens web backend.
 
 - If you’re looking for the overall project documentation, see the root README at `../README.md`.
 - If you want to see how the ONNX model is used, see the web backend at `../Wildlens-Web/Backend/README.md`.

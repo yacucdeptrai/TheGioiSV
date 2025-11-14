@@ -124,7 +124,7 @@ def auto_device(user_device: str | None) -> str | int | None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='WildLens: Train YOLOv8 on custom 30-species dataset and export ONNX + labels')
+    parser = argparse.ArgumentParser(description='WildLens: Train YOLOv11 on custom 30-species dataset and export ONNX + labels')
     parser.add_argument('--data', type=str, default=str(Path(__file__).resolve().parent.parent / 'data' / 'data.yaml'),
                         help='Path to dataset data.yaml (centralized at WildLens-Model/data/data.yaml by default)')
     parser.add_argument('--epochs', type=int, default=100)
@@ -232,8 +232,8 @@ def main():
     except Exception as e:
         print(f'WARN: Label sanity check failed: {e}')
 
-    # Load base YOLOv8n model
-    model = YOLO('yolov8n.pt')
+    # Load base YOLO11s model (Ultralytics naming uses 'yolo11*')
+    model = YOLO('yolo11s.pt')
 
     # Compose training kwargs using Ultralytics API flags
     train_kwargs = dict(

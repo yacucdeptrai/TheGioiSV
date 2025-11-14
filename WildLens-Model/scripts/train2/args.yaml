@@ -1,6 +1,6 @@
 task: detect
 mode: train
-model: yolov8n.pt
+model: yolo11n.pt
 data: C:\Users\mercu\PycharmProjects\TheGioiSV\WildLens-Model\data\data.yaml
 epochs: 100
 time: null
