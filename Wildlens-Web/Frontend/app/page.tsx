@@ -40,10 +40,31 @@ export default function Home() {
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
     const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
+    // Detect mobile device (client-side only)
+    const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
+
+    // Simple device detection with multiple fallbacks, runs only on client
+    useEffect(() => {
+        const detectMobile = (): boolean => {
+            try {
+                // Newer Chromium
+                // @ts-ignore
+                if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
+                    // @ts-ignore
+                    return navigator.userAgentData.mobile;
+                }
+            } catch { /* ignore */ }
+            const ua = (typeof navigator !== 'undefined' ? navigator.userAgent || '' : '').toLowerCase();
+            const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/;
+            const isTouchCapable = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator as any).maxTouchPoints > 0);
+            return mobileRegex.test(ua) || isTouchCapable;
+        };
+        setIsMobile(detectMobile());
+    }, []);
 
     // Hàm xử lý khi người dùng chọn file
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -273,35 +294,44 @@ export default function Home() {
                 <p className={styles.subtitle}>Chụp ảnh hoặc tải ảnh lên để hệ thống AI nhận diện loài động vật trong hình.</p>
 
                 <div 
-                  className={`${styles.dropzone} dropzone ${isDragOver ? 'dragover' : ''}`} 
-                  onDrop={onDrop} 
-                  onDragOver={onDragOver} 
-                  onDragLeave={onDragLeave}
-                  role="button"
-                  aria-label="Kéo thả ảnh vào đây để tải lên"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      const input = document.getElementById('file-input') as HTMLInputElement | null;
-                      input?.click();
-                    }
-                  }}
+                  className={`${styles.dropzone} dropzone ${!isMobile && isDragOver ? 'dragover' : ''}`} 
+                  onDrop={!isMobile ? onDrop : undefined}
+                  onDragOver={!isMobile ? onDragOver : undefined}
+                  onDragLeave={!isMobile ? onDragLeave : undefined}
+                  role="region"
+                  aria-label={isMobile ? 'Chọn nguồn ảnh' : 'Kéo thả ảnh vào đây hoặc chọn ảnh từ máy'}
                 >
                   <div className={styles.dropInner}>
-                    <p><strong>Kéo & thả ảnh</strong> vào đây hoặc</p>
-                    <div className={styles.actionsRow}>
-                      <label htmlFor="file-input" className="btn primary" aria-label="Chọn ảnh từ máy">Chọn ảnh</label>
-                      <button type="button" className="btn" onClick={openCamera} aria-label="Mở camera để chụp ảnh">Dùng camera</button>
-                    </div>
-                    <input
-                      id="file-input"
-                      type="file"
-                      accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.bmp,.gif,.tif,.tiff"
-                      // gợi ý dùng camera sau trên di động hỗ trợ
-                      capture="environment"
-                      onChange={handleFileChange}
-                      className="visually-hidden"
-                    />
+                    {isMobile ? (
+                      <>
+                        <p><strong>Chọn nguồn ảnh</strong></p>
+                        <div className={styles.actionsRow}>
+                          <button type="button" className="btn primary" onClick={openCamera} aria-label="Mở camera để chụp ảnh">Dùng camera</button>
+                          <label htmlFor="file-input" className="btn" aria-label="Chọn ảnh từ thư viện">Chọn từ thư viện</label>
+                        </div>
+                        <input
+                          id="file-input"
+                          type="file"
+                          accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.bmp,.gif,.tif,.tiff"
+                          onChange={handleFileChange}
+                          className="visually-hidden"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <p><strong>Kéo & thả ảnh</strong> vào đây hoặc</p>
+                        <div className={styles.actionsRow}>
+                          <label htmlFor="file-input" className="btn primary" aria-label="Chọn ảnh từ máy">Chọn ảnh</label>
+                        </div>
+                        <input
+                          id="file-input"
+                          type="file"
+                          accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.bmp,.gif,.tif,.tiff"
+                          onChange={handleFileChange}
+                          className="visually-hidden"
+                        />
+                      </>
+                    )}
                     <p className="muted" aria-live="polite">Hỗ trợ JPG, PNG, WebP, AVIF, BMP, GIF, TIFF (tùy hỗ trợ trình duyệt).</p>
                   </div>
                 </div>
