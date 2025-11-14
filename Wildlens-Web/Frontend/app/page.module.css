@@ -38,13 +38,4 @@
 .label { color: var(--muted); font-weight: 600; }
 .conf { margin-left: .5rem; color: var(--accent); font-weight: 700; }
 
-/* Camera UI */
-.cameraBox { display: grid; gap: .75rem; justify-items: center; }
-.video {
-  width: min(100%, 640px);
-  aspect-ratio: 3 / 4;
-  background: black;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
-.cameraControls { display: flex; gap: .5rem; }
+/* (Removed) In-page camera preview styles — native camera flow is used on mobile */

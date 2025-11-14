@@ -24,6 +24,9 @@
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
+  /* Layout sizes */
+  --header-h: 64px;
+  --footer-h: 72px;
 }
 
 /* Light theme overrides */
@@ -71,8 +74,9 @@ a { color: inherit; text-decoration: none; }
 .visually-hidden { position: absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
 
 /* 4) Header */
-.site-header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); background: color-mix(in oklab, var(--panel), transparent 40%); }
-.header-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-4); }
+/* Make header fixed to the top */
+.site-header { position: fixed; inset: 0 0 auto 0; height: var(--header-h); z-index: 50; backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); background: color-mix(in oklab, var(--panel), transparent 40%); }
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); height: 100%; padding-block: 0; }
 .brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 700; letter-spacing: .2px; }
 .brand-mark { font-size: 1.2rem; display: inline-block; }
 .brand-text { font-size: 1.05rem; }
@@ -89,7 +93,7 @@ a { color: inherit; text-decoration: none; }
 .hamburger-inner::before { transform: translateY(-6px); }
 .hamburger-inner::after { transform: translateY(6px); }
 
-.mobile-drawer { position: fixed; inset: 0 0 auto auto; top: 56px; right: var(--space-4); width: min(92%, 320px); background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transform: translateY(-10px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+.mobile-drawer { position: fixed; inset: 0 0 auto auto; top: var(--header-h); right: var(--space-4); width: min(92%, 320px); background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transform: translateY(-10px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
 .mobile-drawer.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
 .mobile-drawer ul { list-style: none; padding: var(--space-4); margin: 0; display: grid; gap: .5rem; }
 .mobile-drawer a { display: block; padding: .6rem .8rem; border-radius: 10px; color: var(--text); background: var(--panel-2); border: 1px solid var(--border); }
@@ -102,8 +106,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* 5) Footer */
-.site-footer { margin-top: var(--space-12); border-top: 1px solid var(--border); background: color-mix(in oklab, var(--panel), transparent 30%); }
-.footer-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-6); }
+/* Make footer fixed to the bottom */
+.site-footer { position: fixed; inset: auto 0 0 0; height: var(--footer-h); border-top: 1px solid var(--border); background: color-mix(in oklab, var(--panel), transparent 30%); }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); height: 100%; padding-block: 0; }
 .site-footer ul { list-style: none; display: flex; gap: var(--space-4); padding: 0; margin: 0; }
 .site-footer a { color: var(--muted); }
 .site-footer a:hover, .site-footer a:focus-visible { color: var(--text); }
@@ -123,8 +128,13 @@ a { color: inherit; text-decoration: none; }
 .dropzone p { margin: 0; color: var(--muted); }
 
 /* 7) Sections */
-main { padding-block: var(--space-8); }
-section { padding-block: var(--space-8); }
+/* Add padding so content is not overlapped by fixed header/footer */
+main { 
+  padding-top: calc(var(--space-8) + var(--header-h));
+  padding-bottom: calc(var(--space-8) + var(--footer-h));
+  min-height: calc(100dvh - var(--header-h) - var(--footer-h));
+}
+section { padding-block: var(--space-8); scroll-margin-top: calc(var(--header-h) + 12px); }
 section + section { border-top: 1px solid var(--border); }
 
 /* 8) Accessibility helpers */

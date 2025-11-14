@@ -1,8 +1,7 @@
 # Backend (FastAPI) & common libs
 fastapi[all]
+
+# AI & Computer Vision
 numpy>=2.3.4
 opencv-python-headless>=4.9.0.80
-onnx>=1.16.0
-onnxslim>=0.1.71
 onnxruntime
-uvicorn

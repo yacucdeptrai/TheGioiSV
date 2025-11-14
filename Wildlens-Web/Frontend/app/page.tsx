@@ -36,16 +36,16 @@ export default function Home() {
     const [detections, setDetections] = useState<DetectionResult[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [lastRecordId, setLastRecordId] = useState<string | null>(null);
     const [imgSrc, setImgSrc] = useState<string | null>(null); // Để lưu ảnh gốc
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
-    const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
-    const [cameraError, setCameraError] = useState<string | null>(null);
     // Detect mobile device (client-side only)
     const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const mediaStreamRef = useRef<MediaStream | null>(null);
+    // Separate hidden inputs for mobile: camera vs gallery
+    const cameraInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
 
     // Simple device detection with multiple fallbacks, runs only on client
     useEffect(() => {
@@ -125,8 +125,11 @@ export default function Home() {
                 throw new Error(`Lỗi từ server: ${response.statusText}`);
             }
 
-            const data: ApiResponse = await response.json();
+            const data: ApiResponse & { record_id?: string } = await response.json();
             setDetections(data.detections || []);
+            if (data.record_id) {
+                setLastRecordId(data.record_id);
+            }
 
         } catch (err) {
             if (err instanceof Error) {
@@ -139,85 +142,10 @@ export default function Home() {
         }
     };
 
-    // CAMERA: mở camera và xin quyền
-    const openCamera = async () => {
-        setCameraError(null);
-        setError(null);
-        try {
-            if (!('mediaDevices' in navigator) || !navigator.mediaDevices?.getUserMedia) {
-                throw new Error('Trình duyệt không hỗ trợ camera (getUserMedia).');
-            }
-            // Ưu tiên camera sau (environment) nếu có
-            const constraints: MediaStreamConstraints = {
-                video: { facingMode: { ideal: 'environment' } },
-                audio: false,
-            };
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            mediaStreamRef.current = stream;
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                await videoRef.current.play();
-            }
-            setIsCameraOpen(true);
-        } catch (e) {
-            console.error(e);
-            setCameraError('Không thể truy cập camera. Vui lòng cấp quyền hoặc kiểm tra thiết bị.');
-        }
+    // Mobile: trigger native camera via hidden input with capture
+    const triggerMobileCamera = () => {
+        cameraInputRef.current?.click();
     };
-
-    const closeCamera = () => {
-        if (mediaStreamRef.current) {
-            mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-            mediaStreamRef.current = null;
-        }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
-        setIsCameraOpen(false);
-    };
-
-    // Chụp ảnh từ video và gửi nhận diện
-    const captureFromCamera = async () => {
-        if (!videoRef.current) return;
-        const video = videoRef.current;
-
-        // Tạo canvas tạm để chụp frame
-        const temp = document.createElement('canvas');
-        const w = video.videoWidth;
-        const h = video.videoHeight;
-        temp.width = w;
-        temp.height = h;
-        const tctx = temp.getContext('2d');
-        if (!tctx) return;
-        tctx.drawImage(video, 0, 0, w, h);
-
-        // Hiển thị trước lên UI
-        const dataUrl = temp.toDataURL('image/jpeg', 0.95);
-        setImgSrc(dataUrl);
-        setDetections([]);
-
-        // Chuyển thành blob/file để tận dụng pipeline có sẵn
-        const blob = await new Promise<Blob | null>((resolve) => temp.toBlob((b) => resolve(b), 'image/jpeg', 0.95));
-        if (blob) {
-            const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
-            setSelectedFile(file);
-            await handleDetection(file);
-        } else {
-            setError('Không thể chụp ảnh từ camera.');
-        }
-        // Đóng camera sau khi chụp để tiết kiệm pin
-        closeCamera();
-    };
-
-    // Đảm bảo dọn tài nguyên camera khi rời trang/unmount
-    useEffect(() => {
-        return () => {
-            if (mediaStreamRef.current) {
-                mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-                mediaStreamRef.current = null;
-            }
-        };
-    }, []);
 
     // Hàm vẽ kết quả lên canvas
     useEffect(() => {
@@ -306,16 +234,34 @@ export default function Home() {
                       <>
                         <p><strong>Chọn nguồn ảnh</strong></p>
                         <div className={styles.actionsRow}>
-                          <button type="button" className="btn primary" onClick={openCamera} aria-label="Mở camera để chụp ảnh">Dùng camera</button>
-                          <label htmlFor="file-input" className="btn" aria-label="Chọn ảnh từ thư viện">Chọn từ thư viện</label>
+                          <button
+                            type="button"
+                            className="btn primary"
+                            onClick={triggerMobileCamera}
+                            aria-label="Chụp bằng camera"
+                          >Dùng camera</button>
+                          <label htmlFor="gallery-input" className="btn" aria-label="Chọn ảnh từ thư viện">Chọn từ thư viện</label>
                         </div>
+                        {/* Hidden input that hints the OS to open Camera; OS may still allow choosing from gallery as fallback */}
                         <input
-                          id="file-input"
+                          ref={cameraInputRef}
+                          id="camera-input"
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleFileChange}
+                          className="visually-hidden"
+                        />
+                        {/* Hidden input for picking from gallery explicitly */}
+                        <input
+                          ref={galleryInputRef}
+                          id="gallery-input"
                           type="file"
                           accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.bmp,.gif,.tif,.tiff"
                           onChange={handleFileChange}
                           className="visually-hidden"
                         />
+                        <p className="muted" aria-live="polite">Nhấn “Dùng camera” để mở ứng dụng Camera trên thiết bị. Nếu không hỗ trợ, hệ điều hành sẽ mở trình chọn ảnh.</p>
                       </>
                     ) : (
                       <>
@@ -337,22 +283,15 @@ export default function Home() {
                 </div>
 
                 {isLoading && <div className={styles.banner} role="status">Đang xử lý... Vui lòng chờ.</div>}
-                {(error || cameraError) && <div className={`${styles.banner} ${styles.error}`} role="alert">{error || cameraError}</div>}
-            </section>
-
-            {isCameraOpen && (
-              <section id="camera" className={styles.section} aria-labelledby="camera-title">
-                <h2 id="camera-title" className={styles.sectionTitle}>Camera</h2>
-                <div className={styles.cameraBox}>
-                  <video ref={videoRef} className={styles.video} playsInline muted />
-                  <div className={styles.cameraControls}>
-                    <button className="btn primary" onClick={captureFromCamera} aria-label="Chụp ảnh">Chụp ảnh</button>
-                    <button className="btn" onClick={closeCamera} aria-label="Đóng camera">Đóng</button>
+                {error && <div className={`${styles.banner} ${styles.error}`} role="alert">{error}</div>}
+                {!isLoading && !error && lastRecordId && (
+                  <div className={styles.banner} role="status" aria-live="polite">
+                    Đã lưu vào Lịch sử (tồn tại 30 phút). 
+                    <a href={`/history/${lastRecordId}`} style={{ marginLeft: 8 }}>Xem chi tiết</a> ·
+                    <a href={`/history`} style={{ marginLeft: 8 }}>Mở Lịch sử</a>
                   </div>
-                  <p className="muted">Nếu không thấy camera, hãy cấp quyền truy cập camera cho trình duyệt.</p>
-                </div>
-              </section>
-            )}
+                )}
+            </section>
 
             <section id="results" className={styles.section} aria-labelledby="results-title">
                 <h2 id="results-title" className={styles.sectionTitle}>Kết quả</h2>

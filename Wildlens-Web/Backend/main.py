@@ -7,8 +7,12 @@ import json
 import io
 from fastapi import UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
+from typing import List, Deque, Dict, Any
 import os
+import uuid
+from datetime import datetime, timedelta, timezone
+from collections import deque
+import base64
 
 # ==============================================================================
 # BƯỚC 3: LOGIC AI CHO YOLOv8 (PHẦN LÕI)
@@ -168,6 +172,85 @@ SESSION = None
 SPECIES_DATA = {}
 LABELS = []
 
+# --- Short-term in-memory history (30-minute retention) ---
+HISTORY_TTL_MINUTES = int(os.environ.get("HISTORY_TTL_MINUTES", "30"))
+HISTORY_MAX_ITEMS = int(os.environ.get("HISTORY_MAX_ITEMS", "500"))
+
+class HistoryStore:
+    def __init__(self, ttl_minutes: int = 30, max_items: int = 500):
+        self.ttl = timedelta(minutes=ttl_minutes)
+        self.max_items = max_items
+        self.records: Dict[str, Dict[str, Any]] = {}
+        self.order: Deque[str] = deque()  # maintain insertion order of ids
+
+    def _cleanup(self):
+        now = datetime.now(timezone.utc)
+        # remove expired by timestamp
+        expired_ids = []
+        for rid, rec in list(self.records.items()):
+            ts = rec.get("ts_dt")
+            if ts and now - ts > self.ttl:
+                expired_ids.append(rid)
+        for rid in expired_ids:
+            self.records.pop(rid, None)
+        # also trim by max_items (keep newest)
+        if len(self.records) > self.max_items:
+            # build sorted ids by ts
+            ids_by_time = sorted(self.records.items(), key=lambda kv: kv[1].get("ts_dt", now))
+            to_remove = len(self.records) - self.max_items
+            for i in range(to_remove):
+                self.records.pop(ids_by_time[i][0], None)
+
+    def add(self, record: Dict[str, Any]) -> str:
+        self._cleanup()
+        rid = str(uuid.uuid4())
+        record = dict(record)
+        record["id"] = rid
+        # normalize timestamp
+        ts_dt = datetime.now(timezone.utc)
+        record["ts_dt"] = ts_dt
+        record["ts_iso"] = ts_dt.isoformat()
+        self.records[rid] = record
+        self.order.append(rid)
+        # keep deque in sync, drop missing ids
+        while len(self.order) > self.max_items:
+            old_id = self.order.popleft()
+            self.records.pop(old_id, None)
+        return rid
+
+    def list(self) -> List[Dict[str, Any]]:
+        self._cleanup()
+        # return newest first
+        items = sorted(self.records.values(), key=lambda r: r.get("ts_dt"), reverse=True)
+        # produce summaries
+        out = []
+        for r in items:
+            labels = [d.get("label") for d in r.get("detections", [])]
+            out.append({
+                "id": r["id"],
+                "ts": r.get("ts_iso"),
+                "labels": labels,
+                "count": len(labels),
+                "thumb_b64": r.get("thumb_b64"),
+            })
+        return out
+
+    def get(self, rid: str) -> Dict[str, Any] | None:
+        self._cleanup()
+        rec = self.records.get(rid)
+        if not rec:
+            return None
+        # shape detail response
+        return {
+            "id": rec["id"],
+            "ts": rec.get("ts_iso"),
+            "detections": rec.get("detections", []),
+            "image_b64": rec.get("image_b64"),
+        }
+
+
+HISTORY = HistoryStore(ttl_minutes=HISTORY_TTL_MINUTES, max_items=HISTORY_MAX_ITEMS)
+
 @app.on_event("startup")
 def load_resources():
     global SESSION, SPECIES_DATA, LABELS
@@ -229,12 +312,65 @@ async def detect_objects(file: UploadFile = File(...)):
                 "confidence": det["confidence"],
                 "details": info # Thêm toàn bộ thông tin
             })
-            
-    return {"detections": results_with_info}
+    # 5. Lưu lịch sử (ảnh nén + thumbnail) với TTL
+    try:
+        # reconstruct image from bytes
+        image_array = np.frombuffer(image_bytes, dtype=np.uint8)
+        img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        if img is not None:
+            # create display-sized image (max 1280 px on longer side)
+            h, w = img.shape[:2]
+            max_side = max(h, w)
+            scale = 1280.0 / max_side if max_side > 1280 else 1.0
+            if scale != 1.0:
+                img_disp = cv2.resize(img, (int(w*scale), int(h*scale)), interpolation=cv2.INTER_AREA)
+            else:
+                img_disp = img
+            # JPEG encode
+            ok, enc = cv2.imencode('.jpg', img_disp, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
+            image_b64 = None
+            if ok:
+                image_b64 = "data:image/jpeg;base64," + base64.b64encode(enc.tobytes()).decode('ascii')
+            # thumbnail (max 280px)
+            th_scale = 280.0 / max(img_disp.shape[0], img_disp.shape[1]) if max(img_disp.shape[:2]) > 280 else 1.0
+            thumb = cv2.resize(img_disp, (int(img_disp.shape[1]*th_scale), int(img_disp.shape[0]*th_scale)), interpolation=cv2.INTER_AREA) if th_scale != 1.0 else img_disp
+            ok2, enc2 = cv2.imencode('.jpg', thumb, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+            thumb_b64 = None
+            if ok2:
+                thumb_b64 = "data:image/jpeg;base64," + base64.b64encode(enc2.tobytes()).decode('ascii')
+        else:
+            image_b64 = None
+            thumb_b64 = None
+    except Exception:
+        image_b64 = None
+        thumb_b64 = None
+
+    record_id = HISTORY.add({
+        "detections": results_with_info,
+        "image_b64": image_b64,
+        "thumb_b64": thumb_b64,
+        "filename": getattr(file, 'filename', None),
+        "size": len(image_bytes) if isinstance(image_bytes, (bytes, bytearray)) else None,
+    })
+
+    return {"detections": results_with_info, "record_id": record_id}
 
 @app.get("/")
 def read_root():
     return {"Hello": "Đây là Animal Detector API"}
+
+# --- History Endpoints ---
+@app.get("/history")
+def list_history():
+    return {"items": HISTORY.list(), "ttl_minutes": HISTORY_TTL_MINUTES}
+
+
+@app.get("/history/{record_id}")
+def get_history(record_id: str):
+    item = HISTORY.get(record_id)
+    if not item:
+        raise fastapi.HTTPException(status_code=404, detail="Record not found or expired")
+    return item
 
 # --- Lệnh chạy (gõ vào terminal): uvicorn main:app --reload --host 0.0.0.0 --port 8000 ---
 # === THÊM VÀO CUỐI FILE main.py ===

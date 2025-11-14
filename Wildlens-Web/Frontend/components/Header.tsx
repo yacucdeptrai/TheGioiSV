@@ -38,6 +38,7 @@ export default function Header() {
             <li><a href="#upload">Upload</a></li>
             <li><a href="#results">Results</a></li>
             <li><a href="#about">About</a></li>
+            <li><Link href="/history">History</Link></li>
           </ul>
         </nav>
 
@@ -69,6 +70,7 @@ export default function Header() {
           <li><a href="#upload" onClick={() => setOpen(false)}>Upload</a></li>
           <li><a href="#results" onClick={() => setOpen(false)}>Results</a></li>
           <li><a href="#about" onClick={() => setOpen(false)}>About</a></li>
+          <li><Link href="/history" onClick={() => setOpen(false)}>History</Link></li>
           <li>
             <ThemeToggle />
           </li>
