@@ -1,38 +1,100 @@
+# Unified dataset config for WildLens (centralized)
+# Dataset is organized per-species under WildLens-Model/data/<Species>/{train,valid,test}/
+# Ultralytics supports multiple paths per split; we aggregate all species splits below.
+
+# Paths are relative to this YAML file's location (WildLens-Model/data/)
 train:
 - Bear/train/images
+- Bird/train/images
+- Cat/train/images
+- Chicken/train/images
+- Cow/train/images
+- Deer/train/images
+- Dog/train/images
+- Dolphin/train/images
+- Duck/train/images
+- Elephant/train/images
+- Fox/train/images
+- Frog/train/images
+- Giraffe/train/images
+- Horse/train/images
+- Kangaroo/train/images
+- Koala/train/images
+- Lion/train/images
+- Monkey/train/images
+- Panda/train/images
+- Penguin/train/images
+- Pig/train/images
+- Rabbit/train/images
+- Raccoon/train/images
+- Sheep/train/images
+- Squirrel/train/images
+- Tiger/train/images
+- Turtle/train/images
+- Whale/train/images
+- Wolf/train/images
+- Zebra/train/images
 val:
 - Bear/valid/images
+- Bird/valid/images
+- Cat/valid/images
+- Chicken/valid/images
+- Cow/valid/images
+- Deer/valid/images
+- Dog/valid/images
+- Dolphin/valid/images
+- Duck/valid/images
+- Elephant/valid/images
+- Fox/valid/images
+- Frog/valid/images
+- Giraffe/valid/images
+- Horse/valid/images
+- Kangaroo/valid/images
+- Koala/valid/images
+- Lion/valid/images
+- Monkey/valid/images
+- Panda/valid/images
+- Penguin/valid/images
+- Pig/valid/images
+- Rabbit/valid/images
+- Raccoon/valid/images
+- Sheep/valid/images
+- Squirrel/valid/images
+- Tiger/valid/images
+- Turtle/valid/images
+- Whale/valid/images
+- Zebra/valid/images
 test:
 - Bear/test/images
+- Bird/test/images
+- Cat/test/images
+- Chicken/test/images
+- Cow/test/images
+- Deer/test/images
+- Dog/test/images
+- Duck/test/images
+- Elephant/test/images
+- Fox/test/images
+- Frog/test/images
+- Giraffe/test/images
+- Horse/test/images
+- Kangaroo/test/images
+- Koala/test/images
+- Lion/test/images
+- Monkey/test/images
+- Panda/test/images
+- Penguin/test/images
+- Pig/test/images
+- Rabbit/test/images
+- Raccoon/test/images
+- Sheep/test/images
+- Squirrel/test/images
+- Tiger/test/images
+- Turtle/test/images
+- Zebra/test/images
+
+# Note: Some species may not include a 'test' split in this repo dump.
+
+# 30 classes used by WildLens
 nc: 30
-names:
-- Bear
-- Bird
-- Cat
-- Chicken
-- Cow
-- Deer
-- Dog
-- Dolphin
-- Duck
-- Elephant
-- Fox
-- Frog
-- Giraffe
-- Horse
-- Kangaroo
-- Koala
-- Lion
-- Monkey
-- Panda
-- Penguin
-- Pig
-- Rabbit
-- Raccoon
-- Sheep
-- Squirrel
-- Tiger
-- Turtle
-- Whale
-- Wolf
-- Zebra
+names: [Bear, Bird, Cat, Chicken, Cow, Deer, Dog, Dolphin, Duck, Elephant, Fox, Frog, Giraffe, Horse, Kangaroo, Koala, Lion, Monkey, Panda, Penguin, Pig, Rabbit, Raccoon, Sheep, Squirrel, Tiger, Turtle, Whale, Wolf, Zebra]

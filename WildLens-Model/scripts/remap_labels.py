@@ -5,9 +5,9 @@ from typing import Dict, List
 
 # Global default class list as fallback
 TARGET_CLASSES_30 = [
-    'Dog','Cat','Horse','Cow','Sheep','Pig','Chicken','Duck','Bird','Elephant',
-    'Lion','Tiger','Bear','Monkey','Deer','Fox','Wolf','Rabbit','Squirrel','Giraffe',
-    'Zebra','Kangaroo','Panda','Koala','Raccoon','Penguin','Dolphin','Whale','Turtle','Frog'
+    'Bear', 'Bird', 'Cat', 'Chicken', 'Cow', 'Deer', 'Dog', 'Dolphin', 'Duck', 'Elephant',
+    'Fox', 'Frog', 'Giraffe', 'Horse', 'Kangaroo', 'Koala', 'Lion', 'Monkey', 'Panda', 'Penguin',
+    'Pig', 'Rabbit', 'Raccoon', 'Sheep', 'Squirrel', 'Tiger', 'Turtle', 'Whale', 'Wolf', 'Zebra'
 ]
 
 
