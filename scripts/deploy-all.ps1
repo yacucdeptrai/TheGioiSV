@@ -40,21 +40,13 @@ If (!(Test-Path $LogsDir)) { New-Item -Path $LogsDir -ItemType Directory | Out-N
 $backendPidFile  = Join-Path $LogsDir "backend.pid"
 $frontendPidFile = Join-Path $LogsDir "frontend.pid"
 
-$backendOutLog  = Join-Path $LogsDir "backend-out.log"
-$backendErrLog  = Join-Path $LogsDir "backend-err.log"
-$frontendOutLog = Join-Path $LogsDir "frontend-out.log"
-$frontendErrLog = Join-Path $LogsDir "frontend-err.log"
-
 function Write-Warn([string]$m){ Write-Host $m -ForegroundColor Yellow }
 function Write-Err([string]$m){ Write-Host $m -ForegroundColor Red }
 
-function Is-ProcessRunning($pid){
-    try {
-        $p = Get-Process -Id $pid -ErrorAction Stop
-        return $true
-    } catch {
-        return $false
-    }
+function Is-ProcessRunning($processId) {
+    # Get-Process returns the process object (which acts as $true) if it exists
+    # and $null (which acts as $false) if it doesn't, thanks to -ErrorAction.
+    return (Get-Process -Id $processId -ErrorAction SilentlyContinue)
 }
 
 function Start-Backend {

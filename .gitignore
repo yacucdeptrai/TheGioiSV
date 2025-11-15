@@ -21,7 +21,7 @@ venv/
 
 # Datasets and training artifacts
 WildLens-Model/scripts/train/weights*/
-WildLens-Model/scripts/finetune/weights*/
+WildLens-Model/scripts/finetune*/weights*/
 WildLens-Model/exported_models/*
 WildLens-Model/data/**
 !WildLens-Model/data/data.yaml

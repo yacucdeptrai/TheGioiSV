@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 from collections import deque
 import base64
 
-# ==============================================================================
+# ============================================================================== 
 # BƯỚC 3: LOGIC AI CHO YOLOv8 (PHẦN LÕI)
 # ==============================================================================
 
@@ -23,17 +23,17 @@ import base64
 def preprocess_image(image_bytes: bytes):
     """
     Tiền xử lý ảnh đầu vào.
-    YOLOv8 yêu cầu ảnh 320x320 (dựa theo lỗi của bạn).
+    Tự động resize và pad ảnh về kích thước yêu cầu của model (ví dụ: 640x640).
     """
     # 1. Đọc ảnh từ bytes
     nparr = np.frombuffer(image_bytes, np.uint8)
     original_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     original_shape = original_image.shape # (height, width, channels)
     
-    # 2. Letterbox (Resize và thêm đệm)
-    # ===== THAY ĐỔI Ở ĐÂY =====
-    input_height, input_width = 320, 320 # Sửa 640 -> 320
-    # ==========================
+    # 2. Letterbox (Resize và thêm đệm) theo kích thước mô hình
+    # Sử dụng kích thước được suy ra từ ONNX (mặc định 640x640, có thể override bằng ENV)
+    input_height = int(os.environ.get("BACKEND_FORCE_IMG_SIZE", MODEL_INPUT_H))
+    input_width = int(os.environ.get("BACKEND_FORCE_IMG_SIZE", MODEL_INPUT_W))
     
     # Tính tỉ lệ và kích thước mới
     ratio = min(input_width / original_shape[1], input_height / original_shape[0])
@@ -59,7 +59,7 @@ def preprocess_image(image_bytes: bytes):
     # Chuẩn hóa (0-255 -> 0.0-1.0)
     image_tensor = image_tensor.astype(np.float32) / 255.0
     
-    # Thêm batch dimension (1, 3, 320, 320)
+    # Thêm batch dimension (1, 3, H, W)
     image_tensor = np.expand_dims(image_tensor, axis=0)
     
     # Trả về tensor và thông tin để scale lại
@@ -171,6 +171,9 @@ app.add_middleware(
 SESSION = None
 SPECIES_DATA = {}
 LABELS = []
+# Kích thước đầu vào mặc định (sẽ được cập nhật khi load ONNX)
+MODEL_INPUT_W = 640
+MODEL_INPUT_H = 640
 
 # --- Short-term in-memory history (30-minute retention) ---
 HISTORY_TTL_MINUTES = int(os.environ.get("HISTORY_TTL_MINUTES", "30"))
@@ -253,11 +256,39 @@ HISTORY = HistoryStore(ttl_minutes=HISTORY_TTL_MINUTES, max_items=HISTORY_MAX_IT
 
 @app.on_event("startup")
 def load_resources():
-    global SESSION, SPECIES_DATA, LABELS
+    global SESSION, SPECIES_DATA, LABELS, MODEL_INPUT_W, MODEL_INPUT_H
     
     print("Đang tải tài nguyên...")
     # 1. Tải mô hình ONNX
     SESSION = onnxruntime.InferenceSession("model.onnx")
+    # Suy ra kích thước đầu vào từ mô hình
+    try:
+        inp = SESSION.get_inputs()[0]
+        shape = getattr(inp, 'shape', None)
+        # shape dạng [N, C, H, W] có thể có None hoặc chuỗi động
+        def _to_int(val):
+            try:
+                if isinstance(val, (int, np.integer)):
+                    return int(val)
+                if isinstance(val, str) and val.isdigit():
+                    return int(val)
+            except Exception:
+                return None
+            return None
+        if isinstance(shape, (list, tuple)) and len(shape) >= 4:
+            h = _to_int(shape[2])
+            w = _to_int(shape[3])
+            # Cho phép ép bằng ENV nếu muốn (một số model dynamic dims)
+            forced = os.environ.get("BACKEND_FORCE_IMG_SIZE")
+            if forced and forced.isdigit():
+                MODEL_INPUT_W = MODEL_INPUT_H = int(forced)
+            else:
+                if h and w:
+                    MODEL_INPUT_H = h
+                    MODEL_INPUT_W = w
+        print(f"ONNX input name: {inp.name}, inferred size: {MODEL_INPUT_W}x{MODEL_INPUT_H}")
+    except Exception as e:
+        print(f"WARN: Unable to infer model input size, using default {MODEL_INPUT_W}x{MODEL_INPUT_H}. Error: {e}")
     
     # 2. Tải file species.json
     with open("species.json", "r", encoding="utf-8") as f:
@@ -284,16 +315,16 @@ def load_resources():
 
 @app.post("/detect")
 async def detect_objects(file: UploadFile = File(...)):
-    
+
     image_bytes = await file.read()
-    
+
     # 1. Tiền xử lý (Bước 3)
     input_tensor, orig_shape, new_shape, pad = preprocess_image(image_bytes)
-    
+
     # 2. Chạy Inference
     input_name = SESSION.get_inputs()[0].name
     outputs = SESSION.run(None, {input_name: input_tensor})
-    
+
     # 3. Hậu xử lý (Bước 3)
     detections = postprocess_output(outputs, orig_shape, new_shape, pad, conf_threshold=0.1)
     
