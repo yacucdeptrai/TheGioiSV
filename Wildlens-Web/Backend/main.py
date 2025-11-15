@@ -18,127 +18,236 @@ import base64
 # BƯỚC 3: LOGIC AI CHO YOLOv8 (PHẦN LÕI)
 # ==============================================================================
 
-# THAY THẾ TOÀN BỘ HÀM NÀY
+# Lưu ý: các biến MODEL_INPUT_W/H và MODEL_LAYOUT sẽ được set khi load model
+MODEL_INPUT_W = 640
+MODEL_INPUT_H = 640
+# layout: "NCHW" (default) hoặc "NHWC"
+MODEL_LAYOUT = "NCHW"
+
+def _parse_forced_size_for_env(val: str):
+    """
+    BACKEND_FORCE_IMG_SIZE có thể là:
+      - "640" -> dùng cho cả W và H (vuông)
+      - "640x480" -> dùng width=640 height=480 (hoặc "480x640" tùy ý)
+    Trả về tuple (w:int, h:int) hoặc None nếu không parse được.
+    """
+    if not val:
+        return None
+    try:
+        s = val.strip().lower()
+        if "x" in s:
+            parts = s.split("x")
+            if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                return int(parts[0]), int(parts[1])
+        elif s.isdigit():
+            v = int(s)
+            return v, v
+    except Exception:
+        pass
+    return None
+
+def infer_model_input(session: onnxruntime.InferenceSession):
+    """
+    Infer input width/height and layout from an ONNX session.
+    Returns (w:int, h:int, layout:str)
+    layout is "NCHW" or "NHWC".
+    """
+    # Default fallback
+    w, h = 640, 640
+    layout = "NCHW"
+    try:
+        inp = session.get_inputs()[0]
+        shape = getattr(inp, "shape", None)  # often like [1, 3, 640, 640] or [None, 3, None, None]
+        # helper to coerce digits or numpy ints to int
+        def to_int(x):
+            try:
+                if isinstance(x, (int, np.integer)):
+                    return int(x)
+                if isinstance(x, str) and x.isdigit():
+                    return int(x)
+            except Exception:
+                return None
+            return None
+
+        if isinstance(shape, (list, tuple)) and len(shape) >= 4:
+            # Try NCHW: [N, C, H, W]
+            c_nchw = to_int(shape[1])
+            h_nchw = to_int(shape[2])
+            w_nchw = to_int(shape[3])
+            # Try NHWC: [N, H, W, C]
+            c_nhwc = to_int(shape[3])
+            h_nhwc = to_int(shape[1])
+            w_nhwc = to_int(shape[2])
+
+            # Determine layout by which axis has C==3
+            if c_nchw == 3:
+                layout = "NCHW"
+                if h_nchw and w_nchw:
+                    h, w = h_nchw, w_nchw
+            elif c_nhwc == 3:
+                layout = "NHWC"
+                if h_nhwc and w_nhwc:
+                    h, w = h_nhwc, w_nhwc
+            else:
+                # Fallback heuristics: if either h/w present use them
+                if h_nchw and w_nchw:
+                    layout = "NCHW"
+                    h, w = h_nchw, w_nchw
+                elif h_nhwc and w_nhwc:
+                    layout = "NHWC"
+                    h, w = h_nhwc, w_nhwc
+                else:
+                    # keep default 640x640
+                    pass
+        else:
+            # shape not helpful, leave defaults
+            pass
+
+    except Exception as e:
+        print(f"WARN: infer_model_input() failed: {e}")
+
+    return w, h, layout
+
 
 def preprocess_image(image_bytes: bytes):
     """
     Tiền xử lý ảnh đầu vào.
-    Tự động resize và pad ảnh về kích thước yêu cầu của model (ví dụ: 640x640).
+    Tự động resize và pad ảnh về kích thước yêu cầu của model (MODEL_INPUT_W x MODEL_INPUT_H).
+    Hỗ trợ cả layout NCHW và NHWC.
+    Trả về: input_tensor phù hợp để đưa vào ONNX, cùng original_shape, new_shape, pad=(top,left)
     """
+    global MODEL_INPUT_W, MODEL_INPUT_H, MODEL_LAYOUT
+
     # 1. Đọc ảnh từ bytes
     nparr = np.frombuffer(image_bytes, np.uint8)
     original_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    original_shape = original_image.shape # (height, width, channels)
-    
-    # 2. Letterbox (Resize và thêm đệm) theo kích thước mô hình
-    # Sử dụng kích thước được suy ra từ ONNX (mặc định 640x640, có thể override bằng ENV)
-    input_height = int(os.environ.get("BACKEND_FORCE_IMG_SIZE", MODEL_INPUT_H))
-    input_width = int(os.environ.get("BACKEND_FORCE_IMG_SIZE", MODEL_INPUT_W))
-    
-    # Tính tỉ lệ và kích thước mới
-    ratio = min(input_width / original_shape[1], input_height / original_shape[0])
-    new_shape = (int(original_shape[1] * ratio), int(original_shape[0] * ratio))
-    
+    if original_image is None:
+        raise ValueError("Unable to decode input image")
+    orig_h, orig_w = original_image.shape[:2]
+    original_shape = original_image.shape  # (h, w, c)
+
+    # 2. Lấy kích thước mục tiêu (cho phép override bằng ENV)
+    forced = _parse_forced_size_for_env(os.environ.get("BACKEND_FORCE_IMG_SIZE", "") or "")
+    if forced:
+        target_w, target_h = forced
+    else:
+        target_w, target_h = MODEL_INPUT_W, MODEL_INPUT_H
+
+    # Tính tỉ lệ và kích thước mới (maintain aspect + letterbox)
+    ratio = min(target_w / orig_w, target_h / orig_h)
+    new_w = int(orig_w * ratio)
+    new_h = int(orig_h * ratio)
+    new_shape = (new_w, new_h)  # (w, h) để tiện tính scale sau
+
     # Resize
-    resized_image = cv2.resize(original_image, new_shape, interpolation=cv2.INTER_LINEAR)
-    
-    # Tính toán viền
-    delta_w = input_width - new_shape[0]
-    delta_h = input_height - new_shape[1]
+    resized_image = cv2.resize(original_image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+    # Tính padding để đạt target size
+    delta_w = target_w - new_w
+    delta_h = target_h - new_h
     top, bottom = delta_h // 2, delta_h - (delta_h // 2)
     left, right = delta_w // 2, delta_w - (delta_w // 2)
-    
-    # Thêm viền (màu 114, 114, 114 là màu xám)
+
+    # Thêm viền (màu 114, 114, 114)
     padded_image = cv2.copyMakeBorder(resized_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[114, 114, 114])
-    
-    # 3. Chuẩn hóa và Chuyển đổi
-    # (HWC -> CHW) và (BGR -> RGB)
-    image_tensor = padded_image.transpose((2, 0, 1))[::-1]  # BGR to RGB, HWC to CHW
-    image_tensor = np.ascontiguousarray(image_tensor)
-    
-    # Chuẩn hóa (0-255 -> 0.0-1.0)
-    image_tensor = image_tensor.astype(np.float32) / 255.0
-    
-    # Thêm batch dimension (1, 3, H, W)
-    image_tensor = np.expand_dims(image_tensor, axis=0)
-    
-    # Trả về tensor và thông tin để scale lại
-    return image_tensor, original_shape, new_shape, (top, left)
 
+    # Chuẩn hóa: convert BGR -> RGB
+    img_rgb = padded_image[:, :, ::-1]
 
-# THAY THẾ TOÀN BỘ HÀM NÀY:
+    # Chuyển và chuẩn hoá theo layout
+    if MODEL_LAYOUT == "NCHW":
+        # HWC -> CHW
+        img_chw = img_rgb.transpose((2, 0, 1))
+        img_chw = np.ascontiguousarray(img_chw, dtype=np.float32) / 255.0
+        input_tensor = np.expand_dims(img_chw, axis=0)  # (1, C, H, W)
+    else:
+        # NHWC: (1, H, W, C)
+        img_nhwc = np.ascontiguousarray(img_rgb, dtype=np.float32) / 255.0
+        input_tensor = np.expand_dims(img_nhwc, axis=0)
+
+    return input_tensor, original_shape, new_shape, (top, left)
+
 
 def postprocess_output(outputs, original_shape, new_shape, pad, conf_threshold=0.25, nms_threshold=0.45):
     """
     Hậu xử lý đầu ra từ YOLOv8.
-    Bao gồm lọc confidence, Non-Max Suppression (NMS) và scale lại bounding box.
+    Lưu ý: logic này giả định output dạng (1, num_attrs, num_boxes) hoặc (1, num_boxes, num_attrs).
+    Nếu model của bạn trả ra khác (ví dụ: boxes + scores riêng biệt), cần sửa lại.
     """
-    output_data = outputs[0][0] # Đầu ra thường có shape (1, 84, 8400) -> (84, 8400)
-    
-    # Chuyển (84, 8400) -> (8400, 84)
-    output_data = output_data.T 
-    
+    # Heuristic: chọn tensor outputs[0], cố gắng transpose nếu cần
+    out = outputs[0]
+    # Nếu shape (1, attrs, boxes) -> squeeze first dim
+    if isinstance(out, np.ndarray) and out.ndim == 3 and out.shape[0] == 1:
+        out_proc = out[0]  # (attrs, boxes)
+        # transpose to (boxes, attrs)
+        out_proc = out_proc.T
+    else:
+        # try to make it (boxes, attrs)
+        if isinstance(out, np.ndarray) and out.ndim == 2:
+            out_proc = out
+        else:
+            out_proc = np.array(out)
+            if out_proc.ndim == 3 and out_proc.shape[0] == 1:
+                out_proc = out_proc[0].T
+            elif out_proc.ndim == 2:
+                pass
+            else:
+                # fallback
+                out_proc = out_proc.reshape(-1, out_proc.shape[-1])
+
+    output_data = out_proc  # shape (N, attrs)
+
     boxes = []
     confidences = []
     class_ids = []
-    
-    # Tách box (4) và class scores (80 cho COCO, 30 cho bạn)
-    # Lấy 30 nhãn của bạn
-    num_classes = len(LABELS) 
-    
+
+    num_classes = len(LABELS)
+
     for row in output_data:
-        # Lấy box [cx, cy, w, h]
+        # First 4 are box (cx, cy, w, h) or (x, y, x2, y2) depending on model
         box = row[:4]
-        # Lấy confidence của 30 classes
-        class_scores = row[4:4 + num_classes] 
-        
-        # Tìm class có score cao nhất
-        class_id = np.argmax(class_scores)
-        confidence = class_scores[class_id]
-        
-        # === CHÚ Ý DÒNG NÀY ===
-        # Bây giờ nó sẽ dùng 'conf_threshold' được truyền vào (ví dụ 0.1)
-        if confidence > conf_threshold: 
-            # Chuyển box [cx, cy, w, h] -> [x1, y1, x2, y2]
+        class_scores = row[4:4 + num_classes]
+        if len(class_scores) == 0:
+            # If model provides objectness and then class probs differently, skip
+            continue
+        class_id = int(np.argmax(class_scores))
+        confidence = float(class_scores[class_id])
+
+        if confidence > conf_threshold:
             cx, cy, w, h = box
             x1 = int((cx - w / 2))
             y1 = int((cy - h / 2))
             x2 = int((cx + w / 2))
             y2 = int((cy + h / 2))
-            
+
             boxes.append([x1, y1, x2, y2])
-            confidences.append(float(confidence))
-            class_ids.append(int(class_id))
-            
-    # Áp dụng Non-Max Suppression
+            confidences.append(confidence)
+            class_ids.append(class_id)
+
     indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
-    
-    # Scale box về ảnh gốc
     pad_top, pad_left = pad
     orig_h, orig_w = original_shape[:2]
-    new_h, new_w = new_shape[1], new_shape[0] # (w, h) -> (h, w)
+    new_w, new_h = new_shape  # new_shape was (w, h)
 
     detections = []
     if len(indices) > 0:
         for i in indices.flatten():
             x1, y1, x2, y2 = boxes[i]
-            
-            # 1. Scale về ảnh đã resize (640x640) nhưng chưa padding
-            x1 = (x1 - pad_left)
-            y1 = (y1 - pad_top)
-            x2 = (x2 - pad_left)
-            y2 = (y2 - pad_top)
-            
-            # 2. Scale về ảnh gốc
+            # Remove padding
+            x1 = x1 - pad_left
+            y1 = y1 - pad_top
+            x2 = x2 - pad_left
+            y2 = y2 - pad_top
+
+            # Scale back to original image
             ratio_w = orig_w / new_w
             ratio_h = orig_h / new_h
-            
+
             x1 = int(x1 * ratio_w)
             y1 = int(y1 * ratio_h)
             x2 = int(x2 * ratio_w)
             y2 = int(y2 * ratio_h)
 
-            # Đảm bảo box nằm trong ảnh
             x1, y1 = max(0, x1), max(0, y1)
             x2, y2 = min(orig_w - 1, x2), min(orig_h - 1, y2)
 
@@ -147,7 +256,7 @@ def postprocess_output(outputs, original_shape, new_shape, pad, conf_threshold=0
                 "box": [x1, y1, x2, y2],
                 "confidence": confidences[i]
             })
-            
+
     return detections
 
 # ==============================================================================
@@ -156,8 +265,6 @@ def postprocess_output(outputs, original_shape, new_shape, pad, conf_threshold=0
 
 app = fastapi.FastAPI()
 
-# --- Cấu hình CORS ---
-# Cho phép Next.js (localhost:3000) gọi API này (localhost:8000)
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -167,15 +274,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Tải tài nguyên (Model, Labels, Species) khi server khởi động ---
 SESSION = None
 SPECIES_DATA = {}
 LABELS = []
-# Kích thước đầu vào mặc định (sẽ được cập nhật khi load ONNX)
-MODEL_INPUT_W = 640
-MODEL_INPUT_H = 640
 
-# --- Short-term in-memory history (30-minute retention) ---
+# Short-term history config
 HISTORY_TTL_MINUTES = int(os.environ.get("HISTORY_TTL_MINUTES", "30"))
 HISTORY_MAX_ITEMS = int(os.environ.get("HISTORY_MAX_ITEMS", "500"))
 
@@ -184,11 +287,10 @@ class HistoryStore:
         self.ttl = timedelta(minutes=ttl_minutes)
         self.max_items = max_items
         self.records: Dict[str, Dict[str, Any]] = {}
-        self.order: Deque[str] = deque()  # maintain insertion order of ids
+        self.order: Deque[str] = deque()
 
     def _cleanup(self):
         now = datetime.now(timezone.utc)
-        # remove expired by timestamp
         expired_ids = []
         for rid, rec in list(self.records.items()):
             ts = rec.get("ts_dt")
@@ -196,9 +298,7 @@ class HistoryStore:
                 expired_ids.append(rid)
         for rid in expired_ids:
             self.records.pop(rid, None)
-        # also trim by max_items (keep newest)
         if len(self.records) > self.max_items:
-            # build sorted ids by ts
             ids_by_time = sorted(self.records.items(), key=lambda kv: kv[1].get("ts_dt", now))
             to_remove = len(self.records) - self.max_items
             for i in range(to_remove):
@@ -209,13 +309,11 @@ class HistoryStore:
         rid = str(uuid.uuid4())
         record = dict(record)
         record["id"] = rid
-        # normalize timestamp
         ts_dt = datetime.now(timezone.utc)
         record["ts_dt"] = ts_dt
         record["ts_iso"] = ts_dt.isoformat()
         self.records[rid] = record
         self.order.append(rid)
-        # keep deque in sync, drop missing ids
         while len(self.order) > self.max_items:
             old_id = self.order.popleft()
             self.records.pop(old_id, None)
@@ -223,9 +321,7 @@ class HistoryStore:
 
     def list(self) -> List[Dict[str, Any]]:
         self._cleanup()
-        # return newest first
         items = sorted(self.records.values(), key=lambda r: r.get("ts_dt"), reverse=True)
-        # produce summaries
         out = []
         for r in items:
             labels = [d.get("label") for d in r.get("detections", [])]
@@ -243,7 +339,6 @@ class HistoryStore:
         rec = self.records.get(rid)
         if not rec:
             return None
-        # shape detail response
         return {
             "id": rec["id"],
             "ts": rec.get("ts_iso"),
@@ -251,105 +346,81 @@ class HistoryStore:
             "image_b64": rec.get("image_b64"),
         }
 
-
 HISTORY = HistoryStore(ttl_minutes=HISTORY_TTL_MINUTES, max_items=HISTORY_MAX_ITEMS)
 
 @app.on_event("startup")
 def load_resources():
-    global SESSION, SPECIES_DATA, LABELS, MODEL_INPUT_W, MODEL_INPUT_H
-    
+    global SESSION, SPECIES_DATA, LABELS, MODEL_INPUT_W, MODEL_INPUT_H, MODEL_LAYOUT
+
     print("Đang tải tài nguyên...")
     # 1. Tải mô hình ONNX
-    SESSION = onnxruntime.InferenceSession("model.onnx")
-    # Suy ra kích thước đầu vào từ mô hình
+    model_path = os.environ.get("BACKEND_ONNX_PATH", "model.onnx")
+    SESSION = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+
+    # Suy ra kích thước đầu vào & layout từ mô hình
     try:
-        inp = SESSION.get_inputs()[0]
-        shape = getattr(inp, 'shape', None)
-        # shape dạng [N, C, H, W] có thể có None hoặc chuỗi động
-        def _to_int(val):
-            try:
-                if isinstance(val, (int, np.integer)):
-                    return int(val)
-                if isinstance(val, str) and val.isdigit():
-                    return int(val)
-            except Exception:
-                return None
-            return None
-        if isinstance(shape, (list, tuple)) and len(shape) >= 4:
-            h = _to_int(shape[2])
-            w = _to_int(shape[3])
-            # Cho phép ép bằng ENV nếu muốn (một số model dynamic dims)
-            forced = os.environ.get("BACKEND_FORCE_IMG_SIZE")
-            if forced and forced.isdigit():
-                MODEL_INPUT_W = MODEL_INPUT_H = int(forced)
-            else:
-                if h and w:
-                    MODEL_INPUT_H = h
-                    MODEL_INPUT_W = w
-        print(f"ONNX input name: {inp.name}, inferred size: {MODEL_INPUT_W}x{MODEL_INPUT_H}")
+        inferred_w, inferred_h, inferred_layout = infer_model_input(SESSION)
+        # Allow env override (single value or WxH)
+        forced = _parse_forced_size_for_env(os.environ.get("BACKEND_FORCE_IMG_SIZE", "") or "")
+        if forced:
+            MODEL_INPUT_W, MODEL_INPUT_H = forced
+        else:
+            MODEL_INPUT_W, MODEL_INPUT_H = inferred_w, inferred_h
+        MODEL_LAYOUT = inferred_layout
+        print(f"INFERRED ONNX input size: {MODEL_INPUT_W}x{MODEL_INPUT_H}, layout: {MODEL_LAYOUT}")
     except Exception as e:
         print(f"WARN: Unable to infer model input size, using default {MODEL_INPUT_W}x{MODEL_INPUT_H}. Error: {e}")
-    
+
     # 2. Tải file species.json
     with open("species.json", "r", encoding="utf-8") as f:
         SPECIES_DATA = json.load(f)
-        
+
     # 3. Tải file nhãn (labels.txt)
     with open("labels.txt", "r", encoding="utf-8") as f:
         lines = f.readlines()
-        
-    # Xử lý dòng đầu tiên đặc biệt "Dog"
+
     first_line_clean = lines[0].split(']')[-1].strip()
     LABELS.append(first_line_clean)
-    
-    # Xử lý các dòng còn lại
     for line in lines[1:]:
         LABELS.append(line.strip())
-        
+
     print(f"Đã tải {len(LABELS)} nhãn.")
     print(f"Đã tải thông tin {len(SPECIES_DATA)} loài.")
     print("Server sẵn sàng!")
 
-
-# --- API Endpoint chính ---
-
 @app.post("/detect")
 async def detect_objects(file: UploadFile = File(...)):
-
     image_bytes = await file.read()
-
-    # 1. Tiền xử lý (Bước 3)
     input_tensor, orig_shape, new_shape, pad = preprocess_image(image_bytes)
 
-    # 2. Chạy Inference
+    # run inference
     input_name = SESSION.get_inputs()[0].name
+    # ensure dtype matches (float32)
+    if isinstance(input_tensor, np.ndarray):
+        if input_tensor.dtype != np.float32:
+            input_tensor = input_tensor.astype(np.float32)
     outputs = SESSION.run(None, {input_name: input_tensor})
 
-    # 3. Hậu xử lý (Bước 3)
     detections = postprocess_output(outputs, orig_shape, new_shape, pad, conf_threshold=0.1)
-    
-    # 4. Tra cứu thông tin chi tiết
+
     results_with_info = []
     for det in detections:
         class_id = det["class_id"]
-        label = LABELS[class_id] # Lấy tên nhãn (ví dụ: "Dog")
-        
-        # Lấy thông tin chi tiết từ JSON
+        label = LABELS[class_id] if class_id < len(LABELS) else f"cls{class_id}"
         if label in SPECIES_DATA:
             info = SPECIES_DATA[label]
             results_with_info.append({
                 "box": det["box"],
                 "label": label,
                 "confidence": det["confidence"],
-                "details": info # Thêm toàn bộ thông tin
+                "details": info
             })
-    # 5. Lưu lịch sử (ảnh nén + thumbnail) với TTL
+
+    # Save thumbnails + history (same logic)
     try:
-        # reconstruct image from bytes
         image_array = np.frombuffer(image_bytes, dtype=np.uint8)
         img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         if img is not None:
-            # create display-sized image (max 1280 px on longer side)
             h, w = img.shape[:2]
             max_side = max(h, w)
             scale = 1280.0 / max_side if max_side > 1280 else 1.0
@@ -357,12 +428,10 @@ async def detect_objects(file: UploadFile = File(...)):
                 img_disp = cv2.resize(img, (int(w*scale), int(h*scale)), interpolation=cv2.INTER_AREA)
             else:
                 img_disp = img
-            # JPEG encode
             ok, enc = cv2.imencode('.jpg', img_disp, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
             image_b64 = None
             if ok:
                 image_b64 = "data:image/jpeg;base64," + base64.b64encode(enc.tobytes()).decode('ascii')
-            # thumbnail (max 280px)
             th_scale = 280.0 / max(img_disp.shape[0], img_disp.shape[1]) if max(img_disp.shape[:2]) > 280 else 1.0
             thumb = cv2.resize(img_disp, (int(img_disp.shape[1]*th_scale), int(img_disp.shape[0]*th_scale)), interpolation=cv2.INTER_AREA) if th_scale != 1.0 else img_disp
             ok2, enc2 = cv2.imencode('.jpg', thumb, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
@@ -390,11 +459,9 @@ async def detect_objects(file: UploadFile = File(...)):
 def read_root():
     return {"Hello": "Đây là Animal Detector API"}
 
-# --- History Endpoints ---
 @app.get("/history")
 def list_history():
     return {"items": HISTORY.list(), "ttl_minutes": HISTORY_TTL_MINUTES}
-
 
 @app.get("/history/{record_id}")
 def get_history(record_id: str):
@@ -403,10 +470,6 @@ def get_history(record_id: str):
         raise fastapi.HTTPException(status_code=404, detail="Record not found or expired")
     return item
 
-# --- Lệnh chạy (gõ vào terminal): uvicorn main:app --reload --host 0.0.0.0 --port 8000 ---
-# === THÊM VÀO CUỐI FILE main.py ===
 if __name__ == "__main__":
-    # Lấy port từ biến môi trường của Render, nếu không có thì dùng 8000
     port = int(os.environ.get("PORT", 8000))
-    # Thêm 'import os' lên đầu file nhé
     uvicorn.run(app, host="0.0.0.0", port=port)
