@@ -1,41 +1,396 @@
-/* Page-specific styles */
-.section { display: grid; gap: 1rem; }
+/* Page-specific styles - Enhanced UI/UX */
 
-.title { font-size: clamp(1.4rem, 2.2vw, 2rem); margin: 0; letter-spacing: .2px; }
-.subtitle { margin: 0; color: var(--muted); }
-
-.dropzone { margin-top: .5rem; }
-.dropInner { display: grid; justify-items: center; gap: .75rem; }
-
-.actionsRow { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; }
-
-.banner { margin-top: .75rem; padding: .75rem 1rem; border: 1px solid var(--border); background: color-mix(in oklab, var(--panel), var(--accent) 6%); border-radius: var(--radius-sm); }
-.banner.error { background: color-mix(in oklab, var(--panel), var(--danger) 8%); border-color: color-mix(in oklab, var(--danger), black 40%); }
-
-.sectionTitle { margin: 0; font-size: clamp(1.15rem, 1.6vw, 1.4rem); }
-
-.resultsGrid { display: grid; gap: var(--space-6); align-items: start; }
-@media (min-width: 900px) {
-  .resultsGrid { grid-template-columns: 1.2fr .8fr; }
+/* Hero section */
+.section {
+  display: grid;
+  gap: 1.25rem;
+  animation: slideUp 0.6s var(--ease-out-expo) both;
 }
 
-.canvasCard { display: grid; gap: .5rem; margin: 0; }
+/* Staggered animation for section items */
+.section > *:nth-child(1) { animation-delay: 0s; }
+.section > *:nth-child(2) { animation-delay: 0.08s; }
+.section > *:nth-child(3) { animation-delay: 0.16s; }
+.section > *:nth-child(4) { animation-delay: 0.24s; }
+.section > *:nth-child(5) { animation-delay: 0.32s; }
+
+.title {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  margin: 0;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--text) 0%, var(--primary) 50%, var(--accent) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.1rem;
+  max-width: 600px;
+}
+
+/* Enhanced dropzone */
+.dropzone {
+  margin-top: 0.75rem;
+  position: relative;
+}
+
+.dropzone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, var(--primary-glow), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+}
+
+.dropzone:hover::after {
+  opacity: 0.3;
+}
+
+.dropInner {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+}
+
+/* Upload icon */
+.uploadIcon {
+  width: 72px;
+  height: 72px;
+  color: var(--muted);
+  opacity: 0.7;
+  transition: all 0.4s var(--ease-spring);
+}
+
+.dropzone:hover .uploadIcon {
+  color: var(--primary);
+  opacity: 1;
+  transform: translateY(-8px) scale(1.05);
+}
+
+.actionsRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Banner notifications */
+.banner {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--glass-border);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideUp 0.4s var(--ease-out-expo);
+  box-shadow: var(--shadow);
+}
+
+.banner::before {
+  content: '✓';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.banner.error {
+  background: color-mix(in oklab, var(--panel), var(--danger) 8%);
+  border-color: color-mix(in oklab, var(--danger), transparent 60%);
+}
+
+.banner.error::before {
+  content: '!';
+  background: var(--danger);
+}
+
+.banner a {
+  color: var(--primary);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.banner a:hover {
+  color: var(--accent);
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+}
+
+.loadingSpinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--glass-border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Shimmer placeholder */
+.shimmerPlaceholder {
+  background: linear-gradient(90deg, var(--panel) 0%, var(--glass) 50%, var(--panel) 100%);
+  background-size: 200% 100%;
+  animation: shimmerMove 1.5s ease-in-out infinite;
+  border-radius: var(--radius);
+  min-height: 200px;
+}
+
+@keyframes shimmerMove {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Section title */
+.sectionTitle {
+  margin: 0;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Results grid */
+.resultsGrid {
+  display: grid;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .resultsGrid {
+    grid-template-columns: 1.3fr 0.7fr;
+  }
+}
+
+/* Canvas card */
+.canvasCard {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
 .canvas {
   width: 100%;
   height: auto;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, color-mix(in oklab, var(--panel), black 6%), var(--panel));
-  box-shadow: var(--shadow);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, var(--panel-solid), color-mix(in oklab, var(--panel-solid), black 10%));
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s var(--ease-out-expo), box-shadow 0.3s ease;
 }
 
-.infoBox { display: grid; gap: .75rem; }
-.empty { border: 1px dashed color-mix(in oklab, var(--border), var(--text) 15%); border-radius: var(--radius-sm); padding: var(--space-4); background: color-mix(in oklab, var(--panel), transparent 10%); }
+.canvas:hover {
+  transform: scale(1.005);
+  box-shadow: var(--shadow-glow);
+}
 
-.infoCard { border: 1px solid var(--border); background: color-mix(in oklab, var(--panel), transparent 8%); border-radius: var(--radius); padding: var(--space-4); box-shadow: var(--shadow); }
-.infoCard h3 { margin: 0 0 .25rem; font-size: 1rem; }
-.detailsList { margin: 0; padding-left: 1.1rem; }
-.label { color: var(--muted); font-weight: 600; }
-.conf { margin-left: .5rem; color: var(--accent); font-weight: 700; }
+/* Info box */
+.infoBox {
+  display: grid;
+  gap: 1rem;
+}
 
-/* (Removed) In-page camera preview styles — native camera flow is used on mobile */
+/* Empty state */
+.empty {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-8);
+  background: var(--glass);
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty p {
+  margin: 0;
+}
+
+/* Info cards */
+.infoCard {
+  border: 1px solid var(--glass-border);
+  background: var(--panel);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  box-shadow: var(--shadow);
+  transition: all 0.3s var(--ease-out-expo);
+  animation: slideUp 0.5s var(--ease-out-expo) both;
+}
+
+/* Staggered card animations */
+.infoBox .infoCard:nth-child(1) { animation-delay: 0.1s; }
+.infoBox .infoCard:nth-child(2) { animation-delay: 0.2s; }
+.infoBox .infoCard:nth-child(3) { animation-delay: 0.3s; }
+.infoBox .infoCard:nth-child(4) { animation-delay: 0.4s; }
+.infoBox .infoCard:nth-child(5) { animation-delay: 0.5s; }
+
+.infoCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-hover);
+}
+
+.infoCard h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.detailsList {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.detailsList li {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.detailsList li:last-child {
+  border-bottom: none;
+}
+
+.detailsList strong {
+  color: var(--muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.label {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.conf {
+  margin-left: auto;
+  color: var(--accent);
+  font-weight: 700;
+  background: color-mix(in oklab, var(--accent), transparent 85%);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+/* History page grid */
+.historyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.historyCard {
+  border: 1px solid var(--glass-border);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all 0.3s var(--ease-out-expo);
+  animation: scaleIn 0.4s var(--ease-out-expo) both;
+}
+
+/* Staggered history cards */
+.historyGrid .historyCard:nth-child(1) { animation-delay: 0s; }
+.historyGrid .historyCard:nth-child(2) { animation-delay: 0.05s; }
+.historyGrid .historyCard:nth-child(3) { animation-delay: 0.1s; }
+.historyGrid .historyCard:nth-child(4) { animation-delay: 0.15s; }
+.historyGrid .historyCard:nth-child(5) { animation-delay: 0.2s; }
+.historyGrid .historyCard:nth-child(6) { animation-delay: 0.25s; }
+
+.historyCard:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: var(--shadow-lg), 0 0 30px var(--primary-glow);
+  border-color: var(--primary);
+}
+
+.historyCard a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.historyCardImage {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.historyCardPlaceholder {
+  width: 100%;
+  height: 160px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--panel-solid), var(--glass));
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.historyCardContent {
+  padding: var(--space-4);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.historyCardTitle {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.historyCardMeta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* About section */
+.aboutSection {
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  border: 1px solid var(--glass-border);
+}

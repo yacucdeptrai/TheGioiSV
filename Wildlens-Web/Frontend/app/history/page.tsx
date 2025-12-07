@@ -22,12 +22,20 @@ function timeAgo(iso: string) {
   const now = Date.now();
   const diff = Math.max(0, now - then);
   const s = Math.floor(diff / 1000);
-  if (s < 60) return `${s}s ago`;
+  if (s < 60) return `${s}s trước`;
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) return `${m} phút trước`;
   const h = Math.floor(m / 60);
-  return `${h}h ago`;
+  return `${h} giờ trước`;
 }
+
+// Clock icon
+const ClockIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
 
 export default function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[]>([]);
@@ -47,7 +55,7 @@ export default function HistoryPage() {
         setItems(data.items || []);
         setTtl(data.ttl_minutes || 30);
       } catch (e: any) {
-        setError(e?.message || 'Cannot load history.');
+        setError(e?.message || 'Không thể tải lịch sử.');
       } finally {
         setLoading(false);
       }
@@ -58,32 +66,58 @@ export default function HistoryPage() {
   return (
     <div className="container">
       <section className={styles.section} aria-labelledby="history-title">
-        <h1 id="history-title" className={styles.sectionTitle}>Lịch sử kết quả</h1>
-        <p className="muted">Các kết quả được lưu tạm trong {ttl} phút gần đây.</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h1 id="history-title" className={styles.title}>Lịch sử kết quả</h1>
+            <p className={styles.subtitle}>Các kết quả được lưu tạm trong {ttl} phút gần đây.</p>
+          </div>
+          <Link href="/" className="btn primary">
+            ← Trang chính
+          </Link>
+        </div>
 
-        {loading && <div className={styles.banner} role="status">Đang tải lịch sử...</div>}
+        {loading && (
+          <div className={styles.loading}>
+            <div className={styles.loadingSpinner} />
+            <span>Đang tải lịch sử...</span>
+          </div>
+        )}
+        
         {error && <div className={`${styles.banner} ${styles.error}`} role="alert">{error}</div>}
 
         {!loading && !error && items.length === 0 && (
-          <div className={styles.empty} role="status">Chưa có kết quả gần đây.</div>
+          <div className={styles.empty} role="status">
+            <p>Chưa có kết quả gần đây. Hãy thử nhận diện một số ảnh!</p>
+          </div>
         )}
 
         {!loading && !error && items.length > 0 && (
-          <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem', listStyle: 'none', padding: 0, margin: 0 }}>
-            {items.map(item => (
-              <li key={item.id} className={styles.infoCard}>
-                <Link href={`/history/${item.id}`} aria-label={`Mở chi tiết lịch sử ${item.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{ display: 'grid', gap: '.5rem' }}>
-                    {item.thumb_b64 ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.thumb_b64} alt="Ảnh thu nhỏ" style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid var(--border)' }} />
-                    ) : (
-                      <div className={styles.empty} style={{ minHeight: 120, display: 'grid', placeItems: 'center' }}>Không có ảnh</div>
-                    )}
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{item.count} đối tượng</div>
-                      <div className="muted" aria-label="Nhãn">{item.labels.slice(0, 3).join(', ')}{item.labels.length > 3 ? '…' : ''}</div>
-                      <div className="muted" aria-label="Thời gian">{timeAgo(item.ts)}</div>
+          <ul className={styles.historyGrid}>
+            {items.map((item) => (
+              <li key={item.id} className={styles.historyCard}>
+                <Link href={`/history/${item.id}`} aria-label={`Mở chi tiết lịch sử ${item.id}`}>
+                  {item.thumb_b64 ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={item.thumb_b64} 
+                      alt="Ảnh thu nhỏ" 
+                      className={styles.historyCardImage}
+                    />
+                  ) : (
+                    <div className={styles.historyCardPlaceholder}>
+                      Không có ảnh
+                    </div>
+                  )}
+                  <div className={styles.historyCardContent}>
+                    <div className={styles.historyCardTitle}>
+                      {item.count} đối tượng được phát hiện
+                    </div>
+                    <div className={styles.historyCardMeta}>
+                      {item.labels.slice(0, 3).join(', ')}{item.labels.length > 3 ? '…' : ''}
+                    </div>
+                    <div className={styles.historyCardMeta} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <ClockIcon />
+                      {timeAgo(item.ts)}
                     </div>
                   </div>
                 </Link>

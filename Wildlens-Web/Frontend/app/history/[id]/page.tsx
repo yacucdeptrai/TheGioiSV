@@ -30,6 +30,22 @@ interface HistoryRecord {
   image_b64?: string | null;
 }
 
+// Arrow icon
+const ArrowLeftIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12"/>
+    <polyline points="12 19 5 12 12 5"/>
+  </svg>
+);
+
+// Home icon
+const HomeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+);
+
 export default function HistoryDetailPage() {
   const params = useParams<{ id: string }>();
   const recordId = params?.id as string;
@@ -77,23 +93,32 @@ export default function HistoryDetailPage() {
         } catch (e) {
           // ignore
         }
-        // draw boxes
+        // Draw boxes with enhanced styling
         (record.detections || []).forEach((det) => {
           const { box, label, confidence } = det;
-          ctx.strokeStyle = '#00FF00';
+          
+          ctx.strokeStyle = '#22c55e';
           ctx.lineWidth = 3;
+          ctx.shadowColor = 'rgba(34, 197, 94, 0.5)';
+          ctx.shadowBlur = 8;
           ctx.strokeRect(box[0], box[1], box[2] - box[0], box[3] - box[1]);
+          ctx.shadowBlur = 0;
 
-          ctx.fillStyle = '#00FF00';
           const displayLabel = det.details?.vi_name ? `${det.details.vi_name} | ${label}` : label;
           const text = `${displayLabel} (${(confidence * 100).toFixed(0)}%)`;
-          ctx.font = '18px Arial';
+          ctx.font = 'bold 16px Inter, Arial, sans-serif';
           const textWidth = ctx.measureText(text).width;
+          const padding = 8;
           const textX = box[0];
-          const textY = box[1] > 20 ? box[1] - 20 : box[1];
-          ctx.fillRect(textX, textY, textWidth + 4, 20);
+          const textY = box[1] > 30 ? box[1] - 30 : box[1];
+          
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.95)';
+          ctx.beginPath();
+          ctx.roundRect(textX, textY, textWidth + padding * 2, 26, 6);
+          ctx.fill();
+          
           ctx.fillStyle = '#000000';
-          ctx.fillText(text, textX + 2, textY + 15);
+          ctx.fillText(text, textX + padding, textY + 18);
         });
       };
       img.src = record.image_b64;
@@ -105,14 +130,26 @@ export default function HistoryDetailPage() {
   return (
     <div className="container">
       <section className={styles.section} aria-labelledby="history-detail-title">
-        <h1 id="history-detail-title" className={styles.sectionTitle}>Chi tiết lịch sử</h1>
-
-        <div className={styles.actionsRow}>
-          <Link className="btn" href="/history">← Quay lại Lịch sử</Link>
-          <Link className="btn" href="/">Trang chính</Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+          <h1 id="history-detail-title" className={styles.sectionTitle}>Chi tiết lịch sử</h1>
+          <div className={styles.actionsRow}>
+            <Link className="btn" href="/history">
+              <ArrowLeftIcon />
+              Quay lại
+            </Link>
+            <Link className="btn primary" href="/">
+              <HomeIcon />
+              Trang chính
+            </Link>
+          </div>
         </div>
 
-        {loading && <div className={styles.banner} role="status">Đang tải...</div>}
+        {loading && (
+          <div className={styles.loading}>
+            <div className={styles.loadingSpinner} />
+            <span>Đang tải...</span>
+          </div>
+        )}
         {error && <div className={`${styles.banner} ${styles.error}`} role="alert">{error}</div>}
 
         {record && (
@@ -121,7 +158,9 @@ export default function HistoryDetailPage() {
               <canvas ref={canvasRef} className={styles.canvas} role="img" aria-label="Ảnh và khung nhận diện" />
             </figure>
             <div className={styles.infoBox}>
-              <div className="muted">Thời gian: {new Date(record.ts).toLocaleString()}</div>
+              <div className="muted" style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                Thời gian: {new Date(record.ts).toLocaleString('vi-VN')}
+              </div>
               {record.detections.length === 0 && (
                 <div className={styles.empty}><p>Không phát hiện thấy động vật nào.</p></div>
               )}
@@ -129,8 +168,8 @@ export default function HistoryDetailPage() {
                 <article key={idx} className={styles.infoCard}>
                   <h3>
                     {det.details?.vi_name ?? det.label}
-                    <span className={styles.label}> ({det.label})</span>
-                    <span className={styles.conf}> {(det.confidence * 100).toFixed(0)}%</span>
+                    <span className={styles.label}>({det.label})</span>
+                    <span className={styles.conf}>{(det.confidence * 100).toFixed(0)}%</span>
                   </h3>
                   <ul className={styles.detailsList}>
                     {det.details?.scientific_name && (
