@@ -1,6 +1,6 @@
 # TheGioiSV — WildLens (Web + Backend + Model)
 
->Website URL: https://the-gioi-sv-seven.vercel.app
+>Website URL: https://the-gioi-sv-eta.vercel.app
 
 Unified repository for the WildLens web experience:
 - Frontend: Next.js app (React 19) under `Wildlens-Web/Frontend`
